@@ -1,3 +1,5 @@
 # Frontend
 
-Aplicación Next.js de Monteiro OS. La puesta en marcha, los comandos y el flujo de trabajo están en el [README](../README.md) de la raíz del repositorio.
+Next.js application for Monteiro OS. Setup, commands, and the product documentation are in the [repository README](../README.md).
+
+The current screen is a placeholder. Domain behavior is specified in [FEATURES.md](../FEATURES.md) and is not implemented in this package yet.

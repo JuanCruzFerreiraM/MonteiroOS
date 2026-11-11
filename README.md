@@ -1,76 +1,82 @@
 # Monteiro OS
 
-Monteiro OS es la plataforma interna de gestión, analítica y, más adelante, apoyo a decisiones de un negocio de floricultura en Argentina.
+Monteiro OS is the internal production-management platform for Monteiro, a family-owned wholesale flower business in the La Plata region of Buenos Aires, Argentina.
 
-Hoy el repositorio contiene solo la base de desarrollo: API, aplicación web, PostgreSQL y las comprobaciones automáticas. El dominio de negocio todavía se está descubriendo con las personas que operan el negocio, así que no hay módulos de producción, comercial ni finanzas.
+The business needs a reliable record of what happened in each production section: which practices were used, which products were applied, what was harvested, and, later, what that production cost and what it sold for. The first goal is operational traceability. Later stages add harvest measurement, inventory, cost, and wholesale commercialization.
 
-## Estado actual
+This repository is the functional source of truth for that product. It currently contains the development foundation only. Production, harvest, inventory, and commercial modules are specified and not yet built.
 
-- API con `GET /health`, conectada a PostgreSQL.
-- Aplicación web que muestra que el frontend está en funcionamiento.
-- Alembic listo para la primera migración real, sin tablas de negocio.
-- Entorno de desarrollo con Docker Compose.
-- Tests, lint y CI mínimos.
+## Current implementation
 
-## Stack
+The running system is a modular monolith foundation:
 
-| Capa | Tecnología |
+- A FastAPI application exposes `GET /health`. The endpoint returns `{"status": "ok"}` when PostgreSQL accepts `SELECT 1`, and `503` when it does not.
+- A Next.js application renders a single placeholder page. It has no business navigation, screens, or API calls.
+- SQLAlchemy and Alembic are configured. There are no domain models and no migration revisions.
+- Docker Compose runs PostgreSQL 18, the API, and the web app together.
+- GitHub Actions runs backend lint, format, and pytest, plus frontend lint and production build.
+
+There is no domain data and no brand asset or color system in the repository. The UI copy on the placeholder page is Spanish. The planned MVP is single-user and desktop-first. It does not add accounts or a mobile client.
+
+## Product scope
+
+Four committed stages:
+
+1. **Production registration and traceability.** Record farms, production sections, cultivation cycles, and operations, then reconstruct that history.
+2. **Harvesting and yield.** Record partial harvests and compare cultivation cycles.
+3. **Inventory and production costs.** Track supplies and calculate production cost without assuming a complete opening inventory.
+4. **Market and commercial management.** Connect harvests to boxes, dispatch, sales, and unit economics.
+
+Interactive maps, sensors, automation control, voice capture, forecasting, and multi-farm SaaS are future options. They are not part of the committed roadmap.
+
+## Documentation
+
+Start here:
+
+| Document | Purpose |
 | --- | --- |
-| Frontend | Next.js, React, TypeScript, ESLint, Prettier |
-| Backend | Python 3.13, FastAPI, SQLAlchemy 2, Alembic, uv, Ruff, pytest |
-| Datos | PostgreSQL 18 |
-| Entorno | Docker Compose |
+| [FEATURES.md](FEATURES.md) | Feature index, status, and implementation sequence |
+| [Product vision](docs/product/VISION.md) | Problem, users, principles, and boundaries |
+| [Roadmap](docs/product/ROADMAP.md) | Stages and uncommitted future work |
+| [Glossary](docs/product/GLOSSARY.md) | Domain terms |
+| [Documentation map](docs/README.md) | Full document index |
+| [Open questions](docs/OPEN_QUESTIONS.md) | Decisions that still need the business |
+| [Contributing](CONTRIBUTING.md) | How to implement a feature |
 
-## Estructura
+Domain language keeps the Spanish operational terms *quinta*, *vidriera*, *cantero*, and *medianero*. Definitions are in the glossary.
 
-```text
-monteiro-os/
-├── backend/          API, configuración, Alembic y tests
-├── frontend/         Aplicación Next.js
-├── docs/             Visión, arquitectura y flujo de trabajo
-├── .github/workflows CI
-├── docker-compose.yml
-├── Makefile
-└── .env.example
-```
+## Local development
 
-Los módulos de dominio futuros van a vivir dentro del backend, no como servicios separados. Ver [docs/architecture.md](docs/architecture.md).
+These instructions match the repository configuration (`docker-compose.yml`, `Makefile`, manifests, and CI). They were established with the project bootstrap.
 
-## Requisitos
+### Requirements
 
 - Git
-- Docker Desktop, en ejecución
-- [uv](https://docs.astral.sh/uv/) 0.12 o superior, para tests y migraciones en el host
-- Node.js 22.13 o superior y npm, para lint y build del frontend en el host
-- Make, opcional. Los comandos de abajo también están escritos sin Make
+- Docker, running
+- [uv](https://docs.astral.sh/uv/) 0.12 or newer, for host-side tests and migrations
+- Node.js 22.13 or newer and npm, for host-side frontend lint and build
+- Make, optional
 
-En Windows, Git Bash sirve para los comandos de este documento. `uv` se instala con:
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-## Configuración local
+### Setup
 
 ```bash
-git clone <url-del-repositorio>
-cd monteiro-os
+git clone https://github.com/JuanCruzFerreiraM/MonteiroOS.git
+cd MonteiroOS
+git checkout develop
 cp .env.example .env
 ```
 
-`.env` es opcional si se usan los valores por defecto. No se commitea. Las variables están explicadas en `.env.example`.
+`.env` is optional when the defaults are acceptable. It is not committed. Variables are explained in `.env.example`.
 
-## Arrancar y detener
+### Run and stop
 
 ```bash
 docker compose up --build
 ```
 
-- Frontend: http://localhost:3000
-- API: http://localhost:8000/health
-- Documentación de la API: http://localhost:8000/docs
-
-En otra terminal:
+- Web app: http://localhost:3000
+- API health: http://localhost:8000/health
+- API docs: http://localhost:8000/docs
 
 ```bash
 docker compose logs -f
@@ -78,49 +84,50 @@ docker compose ps
 docker compose down
 ```
 
-Si el puerto 5432 ya está ocupado por otro PostgreSQL, cambiá `POSTGRES_PORT` en `.env` antes de levantar Compose. El backend dentro de Docker sigue hablando con el servicio `db`; el puerto publicado solo afecta a las herramientas que corren en el host.
+`docker compose down` keeps the PostgreSQL volume. `docker compose down -v` deletes it.
 
-Equivalentes con Make, si está instalado: `make up`, `make logs`, `make down`. `make up-d` deja los servicios en segundo plano.
+If port 5432 is already in use, change `POSTGRES_PORT` in `.env` before starting Compose. The backend container still connects to the `db` service. The published port matters only for tools running on the host.
 
-El backend recarga al cambiar código en `backend/app`. El frontend recarga al cambiar la aplicación. Si cambian dependencias de Python, volvé a construir la imagen: `docker compose up --build`. Si cambia `frontend/package-lock.json`, el contenedor ejecuta `npm ci` al iniciar.
+Make equivalents: `make up`, `make up-d`, `make logs`, `make down`.
 
-## Backend
+The API reloads when files under `backend/app` change. The web app reloads when the frontend changes. Rebuild after Python dependency changes: `docker compose up --build`. If `frontend/package-lock.json` changes, the frontend container runs `npm ci` on startup.
 
-Desde `backend/`, con PostgreSQL en marcha (el puerto 5432 publicado por Compose alcanza):
+### Backend
+
+From `backend/`, with PostgreSQL running:
 
 ```bash
 uv sync
 uv run pytest
 uv run ruff check .
-uv run ruff format .
 uv run ruff format --check .
 uv run alembic upgrade head
 ```
 
-`alembic upgrade head` hoy no aplica migraciones de negocio: todavía no hay revisiones. Confirma que Alembic llega a la base.
+`alembic upgrade head` applies no domain schema today because there are no revisions. It confirms that Alembic can reach the database.
 
-Para crear la primera revisión, cuando exista un modelo real:
+Create a revision only when a real model exists:
 
 ```bash
 uv run alembic revision --autogenerate -m "short description"
 uv run alembic upgrade head
 ```
 
-## Frontend
+### Frontend
 
-Desde `frontend/`:
+From `frontend/`:
 
 ```bash
 npm ci
 npm run lint
-npm run format
+npm run format:check
 npm run build
 npm run dev
 ```
 
-`npm run dev` solo hace falta si querés el frontend fuera de Docker.
+`npm run dev` is only needed to run the web app outside Docker.
 
-## Pre-commit
+### Pre-commit
 
 ```bash
 uv tool install pre-commit
@@ -128,11 +135,30 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-Los hooks cubren higiene del repositorio, Ruff y el lint/formato del frontend. No ejecutan la suite de tests ni builds.
+Hooks cover repository hygiene, Ruff, and frontend lint and format. They do not run pytest or the Next.js build.
 
-## Más documentación
+## Stack
 
-- [Visión](docs/vision.md)
-- [Arquitectura](docs/architecture.md)
-- [Desarrollo día a día](docs/development.md)
-- [Roadmap](ROADMAP.md)
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, ESLint, Prettier |
+| Backend | Python 3.13, FastAPI, SQLAlchemy 2, Alembic, uv, Ruff, pytest |
+| Data | PostgreSQL 18 |
+| Environment | Docker Compose |
+| CI | GitHub Actions, jobs `backend` and `frontend` |
+
+Domain modules will live inside this backend and this frontend. They will not be separate services. See [architecture overview](docs/architecture/OVERVIEW.md).
+
+## Repository layout
+
+```text
+MonteiroOS/
+├── backend/          API, configuration, Alembic, tests
+├── frontend/         Next.js application
+├── docs/             Product, domain, architecture, features, workflow
+├── .github/workflows CI
+├── docker-compose.yml
+├── Makefile
+├── FEATURES.md
+└── CONTRIBUTING.md
+```
