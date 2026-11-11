@@ -10,7 +10,7 @@ An operation may later target more than one vidriera. The physical scope of the 
 
 The person who records an operation may be different from anyone who performed it. Some activities have no human executor.
 
-A configured schedule does not prove that an operation physically happened. Lighting, in particular, must be able to represent a program and an observed state as different facts.
+A configured schedule does not prove that an operation physically happened. Lighting, in particular, must be able to represent a program and an observed state as different facts. OPS-01 stores only operations that occurred. A completed operation's time is not in the future, aside from ordinary clock tolerance. Planning or scheduling future work is a separate capability and is not part of the first operation record.
 
 Preparation between cultivation cycles must be representable without assigning it to the wrong cycle.
 
