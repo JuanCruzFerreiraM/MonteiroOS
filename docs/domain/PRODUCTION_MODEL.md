@@ -74,4 +74,5 @@ These are safe for the first implementation slices. They are not additional conf
 - Keep finalized cycles and their allocations.
 - Do not copy an operation onto each cantero or variety.
 - Allow more than one variety allocation on the same cantero in the same cycle.
+- In the first version, store one logical allocation per variety and color on a cantero and cycle. That limit is a simplification. A later version may give physically separate portions their own allocation identities without rewriting history. Do not add geometry for that case now.
 - Keep commercial size off the planting record.

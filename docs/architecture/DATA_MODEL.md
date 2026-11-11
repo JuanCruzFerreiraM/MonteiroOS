@@ -77,6 +77,7 @@ erDiagram
   CANTERO |o--o{ HARVEST_EVENT : "exact origin"
   VARIETY ||--o{ HARVEST_EVENT : "cut as"
   CULTIVATION_CYCLE ||--o{ HARVEST_EVENT : produces
+  CROP_ALLOCATION |o--o{ HARVEST_EVENT : "optional placement"
   HARVEST_EVENT ||--o{ HARVEST_MEASUREMENT : measures
   HARVEST_EVENT }o--o{ HARVEST_LOT : "may be grouped"
   HARVEST_LOT }o--o{ BOX_CONTENT : "origin when known"
@@ -107,8 +108,8 @@ A box content with no harvest lot is an explicit unknown origin, not a missing r
 | At most one open responsibility interval per vidriera. | Either one medianero or direct management by Monteiro. Intervals do not overlap. |
 | A unit belongs to one dimension. Conversion stays inside that dimension. | Confirmed measurement rule. |
 | Product commercial name plus manufacturer is the duplicate check shown to the user. Exact uniqueness is case-insensitive on the commercial name when the manufacturer is empty. | Stops obvious duplicates without blocking two products that share a trade name and have different manufacturers. |
-| A harvest event names a variety and a cycle. Exact origin also names one cantero of that vidriera. Several events may share that pair. | Variety-level partial harvests. |
-| The same variety and color are not allocated twice to one cantero in one cycle. Different varieties on that cantero are allowed. | Multiple varieties per bed, without duplicate rows. |
+| A harvest event names a variety and a cycle. Exact origin also names one cantero of that vidriera. Several events may share that pair. An optional crop-allocation reference is set only when that placement is known, and several events may share it. | Variety-level partial harvests, without inventing an allocation. |
+| In the first version, the same variety and color are not allocated twice to one cantero in one cycle. Different varieties, and a different color of the same variety, are allowed. | MVP simplification so one logical placement has one row. It is not a permanent claim that two physical portions cannot exist. See [OQ-28](../OPEN_QUESTIONS.md#oq-28). |
 | A box is on at most one dispatch. | A physical box is not loaded twice. |
 | Monetary amounts store a currency. | ARS is the default, not an implicit global. |
 

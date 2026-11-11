@@ -28,7 +28,7 @@ Origin status is either:
 
 Unknown vidriera is not a harvest event. Commercial quantities with unknown production origin are recorded in COMM-01.
 
-When the chosen cantero has allocations, the variety picker prefers those varieties and still allows another variety from the same flower types only after the user confirms it is not one of the allocated varieties. A harvest does not create or edit an allocation.
+When the chosen cantero has allocations, the variety picker prefers those varieties and still allows another variety from the same flower types only after the user confirms it is not one of the allocated varieties. The user may also link the event to one of those crop allocations when that placement is reliably known. A crop allocation is one variety's placement in a cultivation cycle and cantero. Repeated cuts may reference the same allocation. The link is omitted when the known origin does not identify one allocation. The system does not create an allocation to fill the gap, and it does not guess one. A harvest does not create or edit an allocation. A partial-origin harvest, which has no cantero, cannot reference an allocation. This feature does not ask for the allocation's surface area.
 
 A progress note may be stored. It is not interpreted as area, plants, or a completed percentage until [OQ-03](../OPEN_QUESTIONS.md#oq-03) is answered.
 
@@ -36,7 +36,7 @@ Several events may share a variety and a cantero. They are independent rows with
 
 ## Expected Behavior
 
-- Two cuts of the same variety and cantero on different dates both remain.
+- Two cuts of the same variety and cantero on different dates both remain, and both may cite the same allocation when one was selected.
 - A cut of one variety leaves the other varieties on that cantero in place.
 - A partial-origin event can be saved without a cantero.
 - An exact-origin event without a cantero is rejected.
@@ -50,6 +50,8 @@ Several events may share a variety and a cantero. They are independent rows with
 - Partial harvesting does not create a cultivation cycle and does not complete one.
 - Harvested plants stay out of production until the next planting. This feature does not infer that state from progress notes.
 - Origin is not inferred from a medianero.
+- A harvest may reference a crop allocation only when the user selects one that belongs to the event's cycle, variety, and, when the origin is exact, cantero.
+- Missing allocation information does not block a harvest whose cycle and variety are known.
 
 ## Data Requirements
 
@@ -60,6 +62,7 @@ Several events may share a variety and a cantero. They are independent rows with
 | Variety | Yes |
 | Origin status: exact or partial | Yes |
 | Cantero of that cycle's vidriera | Required when origin is exact; absent when partial |
+| Crop allocation | No. Only an existing allocation of this cycle and variety, and of the named cantero when origin is exact |
 | Progress note | No |
 | Observations | No |
 | Recording person | No |
@@ -68,7 +71,8 @@ Several events may share a variety and a cantero. They are independent rows with
 
 - From the cycle, add a harvest, choose the variety and the date, and set exact or partial origin.
 - For an exact origin, choose the cantero.
-- Save another cut of the same variety later without deleting the first.
+- Optionally select the crop allocation that identifies the placement, when one is known.
+- Save another cut of the same variety later without deleting the first. The later cut may use the same allocation.
 
 ## Acceptance Criteria
 
@@ -77,6 +81,11 @@ Several events may share a variety and a cantero. They are independent rows with
 - [ ] A harvest event requires a variety and a cultivation cycle.
 - [ ] An exact-origin event requires a cantero of that cycle's vidriera.
 - [ ] A partial-origin event is saved without a cantero and does not assign the cut to every cantero in the vidriera.
+- [ ] A harvest can reference an existing crop allocation for the same cycle, variety, and cantero.
+- [ ] Repeated harvest events can reference that same allocation.
+- [ ] A harvest is saved when no allocation is known, and the stored event has no allocation reference.
+- [ ] An allocation from another cycle, variety, or cantero is rejected.
+- [ ] Saving a harvest does not create a crop allocation.
 - [ ] A harvest that names a cantero from another vidriera is rejected.
 - [ ] Partial harvesting does not complete the cultivation cycle automatically.
 - [ ] Saving a harvest does not remove other variety allocations on that cantero.
@@ -86,7 +95,7 @@ Several events may share a variety and a cantero. They are independent rows with
 
 ## Edge Cases & Validation
 
-- A harvest date more than one day in the future is rejected.
+- A harvest date in the future, beyond ordinary clock tolerance, is rejected. The event records a cut that already happened.
 - Unknown origin is not offered on this form. The user is directed to commercial recording when the vidriera is unknown.
 - Deactivating a cantero blocks a new exact-origin harvest and leaves old events readable.
 
@@ -96,6 +105,7 @@ Several events may share a variety and a cantero. They are independent rows with
 - Yield math (HARV-03).
 - Boxes and unknown commercial origin (COMM-01).
 - Marking a bed empty from percentages.
+- Measured allocation area. [OQ-02](../OPEN_QUESTIONS.md#oq-02) remains open.
 - Completing a cycle from harvest activity (PROD-03).
 
 ## Dependencies & Integration Points

@@ -10,6 +10,8 @@ The same variety and cantero may be harvested on many dates. Each event is indep
 
 Origin on a production harvest is exact or partial. Exact names the cantero. Partial keeps the cycle and variety and leaves the cantero empty, without spreading the quantity across beds. Unknown vidriera is a commercial fact, not a field harvest. A medianero identifier does not supply the missing origin.
 
+A harvest may also reference one crop allocation when that placement is reliably known. The allocation is a variety's placement in one cycle and cantero. Repeated cuts may cite the same allocation. If the known origin does not identify an allocation, the reference stays empty. The system does not invent one, and the missing reference does not block the harvest.
+
 A harvest record is expected to be able to hold:
 
 | Information | Notes |
@@ -19,6 +21,7 @@ A harvest record is expected to be able to hold:
 | Cultivation cycle | The cycle of that vidriera. |
 | Cantero | Required when origin is exact. Absent when origin is partial. |
 | Variety | The cultivated variety being cut. |
+| Crop allocation | Optional. Set only when one existing placement is known. |
 | Harvested portion or progress | Optional. The meaning of a percentage is not confirmed. |
 | Quantity, unit, and exact or estimated status | From the unit catalog. Ramo and vara are separate. |
 | Commercial size, color, and presentation | Optional harvest grades. Size is not taken from planting. |
@@ -38,7 +41,7 @@ Commercially acceptable production is the harvested quantity that remains after 
 - The progress or percentage field may be stored as entered, with its interpretation marked unconfirmed, until [OQ-03](../OPEN_QUESTIONS.md#oq-03) is answered. The software does not treat that number as area, plant count, and informal progress at the same time.
 - The software does not mark a cantero empty just because entered percentages add up to 100. Emptiness is a physical consequence the business understands; the automatic rule is not known.
 - Quality classes are a user-maintained catalog. No class names are seeded. A measurement may be saved with quality explicitly unset.
-- Discarded quantity uses the same dimension as the harvested quantity. A missing discard does not become zero.
+- Discarded quantity uses the same dimension as the harvested quantity and the same measurement. When it is present, it is at least zero and no greater than the harvested quantity. A missing discard does not become zero. A loss outside the harvested quantity is a separate measurement or event.
 - Area-based indicators appear only when a measured area is stored on the cantero or vidriera.
 - Vara (stem), ramo (bunch), and plants stay in the unit in which they were recorded. A presentation may declare an explicit number of varas per ramo. That factor applies only to measurements that cite the presentation, and the derived figure is labeled as derived.
 

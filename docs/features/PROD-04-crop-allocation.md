@@ -39,6 +39,7 @@ Allocations belong to the cycle. Changing the active cycle does not change a fin
 ## Business Rules
 
 - A cantero can contain multiple varieties in one cycle. See [PRODUCTION_MODEL.md](../domain/PRODUCTION_MODEL.md).
+- The first version treats one variety and color combination as one logical allocation per cantero and cycle. That is an MVP simplification, not a permanent rule that a bed can hold the combination only once in nature. Physically separate portions of the same variety may later need their own allocation identities. Records saved under the simplification stay valid if that extension is added. This feature does not model geometry or subdivide a cantero. See [OQ-28](../OPEN_QUESTIONS.md#oq-28).
 - A vidriera's four canteros may each hold their own mix.
 - Cultivated identity is flower type, variety, and color when known.
 - Commercial size is not required to start or describe a cycle.
@@ -74,24 +75,28 @@ Commercial size, quality, and presentation are absent.
 - [ ] A newer cycle's allocations do not replace the finalized cycle's allocations.
 - [ ] The variety picker presents search matches before variety creation.
 - [ ] A portion note, when entered, is stored as text and is not converted into area or plant count.
+- [ ] A second allocation with the same variety and color on the same cantero and cycle is rejected in this version.
+- [ ] A different color of the same variety on that cantero is accepted as another allocation.
 
 ## Edge Cases & Validation
 
-- The same variety and the same color cannot be allocated twice to the same cantero in the same cycle. A different color is a separate allocation.
+- The first version rejects a second allocation with the same variety and the same color on the same cantero in the same cycle. A different color is a separate allocation. The rejection is the MVP simplification above, not evidence that two physical portions are impossible.
 - An inactive variety cannot be newly allocated and remains visible if it was allocated before deactivation.
 - Clearing the last allocation leaves the cycle in place.
 
 ## Out of Scope
 
 - A measured share of the bed (area, linear meters, or plant count) until OQ-02 is answered.
+- Geometric subdivisions of a cantero, and separate allocation identities for physically separate portions of the same variety.
 - Copying the previous cycle's allocations automatically.
 - Harvest quantities and commercial grades.
 
 ## Dependencies & Integration Points
 
 - PROD-02 for varieties and colors. PROD-03 for the cycle.
-- HARV-01 uses these allocations as the planted origin of a cut. A harvest may still record a grade that the allocation does not have.
+- HARV-01 uses these allocations as the planted origin of a cut. A harvest may reference one allocation when that placement is known, and may still record a grade that the allocation does not have.
 
 ## Open Questions
 
 - [OQ-02](../OPEN_QUESTIONS.md#oq-02) is non-blocking. Allocations are valid without a measured portion.
+- [OQ-28](../OPEN_QUESTIONS.md#oq-28) is non-blocking. The one-row-per-variety-and-color rule stands until a later version needs separate portion identities.

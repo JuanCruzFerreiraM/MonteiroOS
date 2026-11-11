@@ -117,7 +117,7 @@ The order is dependency-aware and not a schedule.
 
 | Step | Feature | Outcome |
 | --- | --- | --- |
-| 1 | CORE-01 | Signed-in shell on the existing API and database |
+| 1 | CORE-01 | Single-user application shell on the existing API and database |
 | 2 | PROD-01 | Quintas, vidrieras, and canteros |
 | 3 | PROD-03 | One active cultivation cycle per vidriera |
 | 4 | OPS-01 | An operation recorded against that vidriera |

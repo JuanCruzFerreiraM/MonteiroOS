@@ -38,7 +38,8 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 ## Business Rules
 
 - Scope at this stage is a single vidriera. See [ADR 0004](../decisions/0004-operation-scope-separate-from-yield.md).
-- A schedule is not created here and is not evidence that work happened.
+- OPS-01 records an operation that already happened. It does not record a plan.
+- A schedule is not created here and is not evidence that work happened. Scheduling, if it is needed later, is a separate capability.
 - The recorder, when named, is a person from the registry and may differ from a performer. Performers are OPS-04, so this feature does not require one. There is no software account on the operation.
 
 ## Data Requirements
@@ -46,7 +47,7 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 | Fact | Required |
 | --- | --- |
 | Operation type, from the initial catalog | Yes |
-| Time the operation occurred | Yes |
+| Time the operation occurred | Yes. Not in the future, aside from ordinary clock tolerance |
 | Vidriera | Yes |
 | Cultivation cycle of that vidriera | No |
 | Notes | No |
@@ -69,11 +70,13 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 - [ ] Saving two operations creates two records and leaves both readable.
 - [ ] The operation is stored once and is not duplicated for every cantero or variety.
 - [ ] Saving an operation does not require a software account.
+- [ ] An occurrence time in the future is rejected when the operation is recorded as completed.
+- [ ] The form does not offer a planned or scheduled state.
 
 ## Edge Cases & Validation
 
 - A missing type or time is rejected.
-- An occurrence time more than 24 hours in the future is rejected.
+- An occurrence time later than the current time, beyond ordinary clock tolerance, is rejected. There is no 24-hour grace period.
 - Editing notes does not create a second operation.
 
 ## Out of Scope
@@ -82,6 +85,7 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 - Several vidrieras (OPS-03).
 - Participants (OPS-04).
 - Photographs (TRACE-02).
+- Scheduling or planning future operations. A configured schedule remains a different fact, as described in [OPERATIONS_MODEL.md](../domain/OPERATIONS_MODEL.md).
 - The history browser beyond showing the new operation on the vidriera (TRACE-01).
 
 ## Dependencies & Integration Points

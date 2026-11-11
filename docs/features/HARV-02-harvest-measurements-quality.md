@@ -25,7 +25,7 @@ Ramo (bunch) and vara (stem) are both valid units. Choosing one does not fill th
 
 Quality classes come from a catalog the business maintains. The catalog starts empty. No class names are seeded. A measurement can be saved with quality unset, and the unset state is shown as missing rather than as a default class.
 
-Discarded quantity is separate from quality. A missing discard is missing, not zero.
+Discarded quantity is separate from quality. A missing discard is missing, not zero. When a discard is entered, it is a subset of that measurement's harvested quantity: zero or greater, and no larger than the harvested quantity. Both quantities use compatible units and the same measurement. A loss that is not part of the harvested quantity is a separate measurement or event. It is not entered by making the discard larger than the harvest.
 
 Plants, stems, and bunches do not convert into each other.
 
@@ -40,6 +40,7 @@ Plants, stems, and bunches do not convert into each other.
 
 - Units come from CORE-02. See [ADR 0008](../decisions/0008-controlled-measurement-units.md).
 - Commercially acceptable quantity is defined only when both the harvested quantity and the discard are present in a compatible unit. The definition is applied in HARV-03; this feature stores the inputs.
+- For one measurement, `0 <= discarded_quantity <= harvested_quantity`. The two quantities share a dimension and that measurement's scope.
 - Quality class names are business data. See [OQ-05](../OPEN_QUESTIONS.md#oq-05).
 
 ## Data Requirements
@@ -70,6 +71,8 @@ Quality class catalog: name required, active flag required, description optional
 - [ ] A measurement cannot be saved without a quantity and a catalog unit.
 - [ ] A quantity cannot be saved with a unit that is inactive or unknown.
 - [ ] A discarded amount in a different dimension from the harvested quantity is rejected.
+- [ ] A discarded quantity greater than that measurement's harvested quantity is rejected.
+- [ ] A discarded quantity of zero is accepted and is distinct from a missing discard.
 - [ ] A measurement with no discard shows the discard as missing, and the stored discard is not zero.
 - [ ] A measurement with no quality class is accepted and displayed as quality not recorded.
 - [ ] The quality catalog has no seeded classes in a fresh database.
@@ -83,7 +86,8 @@ Quality class catalog: name required, active flag required, description optional
 
 ## Edge Cases & Validation
 
-- A discard greater than the harvested quantity is allowed and flagged for confirmation, because the business has not defined a hard cap. The confirmation is required so the value is intentional.
+- A discard greater than the harvested quantity is rejected. Confirmation does not override the subset rule.
+- A negative discard is rejected.
 - Zero and negative quantities are rejected.
 - Deleting a class that is in use is rejected.
 
