@@ -44,6 +44,7 @@ Individual specifications are in [docs/features/](features/). The index and the 
 | Document | Contents |
 | --- | --- |
 | [WORKFLOW.md](development/WORKFLOW.md) | Branches, commits, CI, tests, and local commands |
+| [BACKUP.md](development/BACKUP.md) | PostgreSQL backup and restore |
 | [FEATURE_TEMPLATE.md](development/FEATURE_TEMPLATE.md) | Required specification structure |
 | [DEFINITION_OF_DONE.md](development/DEFINITION_OF_DONE.md) | Completion criteria |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Business questions still unresolved |

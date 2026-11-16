@@ -18,14 +18,13 @@ The center of daily production work is the **vidriera detail** view: identity, a
 
 ## Current interface
 
-The implemented interface is a single centered placeholder page that says the application is running. It has:
+The application shell is a desktop layout with a persistent sidebar, a heading, and a main region. It is sized for a window at least 1280 pixels wide. There is no separate mobile navigation.
 
-- no sidebar or other navigation;
-- no design tokens, logo, or color palette in the repository;
-- Tailwind CSS 4 imported and otherwise unconfigured;
-- Spanish copy and `lang="es"` on the document.
+Inicio is the only working destination. Later sections are visible in the sidebar and labeled as not available. They do not open a page and they do not show sample operational data.
 
-There are no brand asset files to preserve. When a logo or a Portuguese-heritage palette is supplied, keep those assets and apply them to the shell. Do not invent a logo or a palette in order to look finished. The product direction calls for that heritage reference; the repository does not contain it yet.
+The interface uses a small set of colors for background, surface, text, borders, and a green accent. These are application chrome, not a brand system. There is still no logo. When a logo or a supplied palette arrives, keep those assets and apply them to the shell. Do not invent a logo to look finished.
+
+User-facing copy stays in Spanish, and `lang="es"` stays on the document. Specifications are in English.
 
 User-facing copy stays in Spanish, matching the current document language and the language of the operation. Specifications are in English and describe behavior, not final microcopy.
 

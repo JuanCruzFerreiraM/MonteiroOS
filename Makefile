@@ -1,4 +1,4 @@
-.PHONY: up up-d down logs ps test lint format format-check migrate frontend-lint frontend-format frontend-build pre-commit
+.PHONY: up up-d down logs ps test lint format format-check migrate frontend-lint frontend-format frontend-build frontend-test verify-backup pre-commit
 
 up:
 	docker compose up --build
@@ -38,6 +38,12 @@ frontend-format:
 
 frontend-build:
 	cd frontend && npm run build
+
+frontend-test:
+	cd frontend && npm test
+
+verify-backup:
+	bash scripts/verify-backup-restore.sh
 
 pre-commit:
 	pre-commit run --all-files

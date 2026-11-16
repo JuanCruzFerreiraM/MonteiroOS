@@ -7,20 +7,20 @@ Monteiro OS is a modular monolith. One backend process and one web application a
 ## Implemented today
 
 ```text
-browser → Next.js placeholder → no business API calls
+browser → Next.js shell → server-side GET /health
                 FastAPI → PostgreSQL
 ```
 
 | Piece | What exists |
 | --- | --- |
-| Frontend | Next.js 16 application. One placeholder page. No navigation and no domain screens. Tailwind CSS 4 is imported. No components, logo, or tokens. |
-| Backend | One FastAPI process. The only route is `GET /health`. |
-| Persistence | PostgreSQL 18. SQLAlchemy 2 opens a connection with `pool_pre_ping`. `Base` is an empty declarative base. Alembic is configured and `backend/alembic/versions/` has no revisions. |
+| Frontend | Next.js 16 desktop shell. A sidebar lists Inicio as the only working destination. Other sections are visible and marked unavailable. The home page reports API and database health. Tailwind CSS 4 supplies a small set of interface colors. There is no logo and no domain screen. |
+| Backend | One FastAPI process. The only route is `GET /health`. When `APP_ACCESS_SECRET` is set, other paths require `X-Monteiro-Access` before they run. |
+| Persistence | PostgreSQL 18. The Compose volume is mounted at `/var/lib/postgresql`, which is the path that image requires. SQLAlchemy 2 opens a connection with `pool_pre_ping` and provides a session factory. `Base` is an empty declarative base. Alembic is configured and `backend/alembic/versions/` has no revisions. Backup and restore are in [BACKUP.md](../development/BACKUP.md). |
 | Configuration | Environment variables with local defaults. See `.env.example`. `DATABASE_URL`, when set, replaces the `POSTGRES_*` pieces. |
-| Delivery | Docker Compose for the web app, API, and database. GitHub Actions jobs named `backend` and `frontend`. |
-| Tests | Pytest hits a real PostgreSQL. Health returns ok when `SELECT 1` works and 503 when it does not. |
+| Delivery | Docker Compose for the web app, API, and database. Published ports bind to `127.0.0.1`. GitHub Actions jobs named `backend` and `frontend`. |
+| Tests | Pytest hits a real PostgreSQL. Health returns ok when `SELECT 1` works and 503 when it does not. Access tests cover the optional secret. Frontend unit tests cover navigation and the shell. |
 
-There is no account directory, no file storage, no queue, no cache, and no domain table. The planned MVP adds a single-user desktop shell and basic deployment protection, not multi-user authorization. See [ADR 0009](../decisions/0009-single-user-desktop-first.md).
+There is no account directory, no file storage, no queue, no cache, and no domain table. The shell is single-user and desktop-first. Deployment protection is loopback binding plus an optional shared secret, not multi-user authorization. See [ADR 0009](../decisions/0009-single-user-desktop-first.md).
 
 Backend layout today:
 
@@ -29,7 +29,7 @@ backend/
 ├── app/
 │   ├── main.py           application factory
 │   ├── api/              HTTP routes
-│   └── core/             settings and database
+│   └── core/             settings, database, deployment access
 ├── alembic/
 └── tests/
 ```

@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@theme {
+  --color-background: #f3f5f2;
+  --color-surface: #ffffff;
+  --color-ink: #1a211c;
+  --color-muted: #4d5a53;
+  --color-line: #d5ddd6;
+  --color-accent: #1f6b45;
+  --color-accent-strong: #174f33;
+  --color-warning: #8d3b32;
+  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
