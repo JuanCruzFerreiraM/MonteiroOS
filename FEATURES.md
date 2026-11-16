@@ -30,10 +30,12 @@ CORE-01 is **In Progress**. It is not integrated until its pull request is revie
 
 | Stage | Goal | Features | Priority |
 | --- | --- | --- | --- |
-| 1 | Operational history of every vidriera and cycle | 15 | P0 and P1 |
+| 1 | Operational history of every vidriera and cycle | 16 | P0 and P1 |
 | 2 | Harvest measurement and cycle comparison | 4 | P1 |
 | 3 | Supplies and production cost | 5 | P2 |
 | 4 | Wholesale flow and unit economics | 6 | P3 |
+
+The four stages contain 31 features.
 
 Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no feature IDs.
 
@@ -45,6 +47,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | CORE-02 | Units of Measurement | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-02-units-of-measurement.md) |
 | CORE-03 | People & Roles Registry | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-03-people-and-roles.md) |
 | PROD-01 | Farms, Vidrieras & Beds | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
+| PROD-06 | Farm Visual Mapping | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-06-farm-visual-mapping.md) |
 | PROD-02 | Flower Type, Variety & Classifications | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-02-crop-variety-catalog.md) |
 | PROD-03 | Cultivation Cycle Management | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-03-cultivation-cycles.md) |
 | PROD-04 | Crop Allocation Within a Cycle | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-04-crop-allocation.md) |
@@ -91,7 +94,8 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 
 ```text
 CORE-01
-  ├── PROD-01 ── PROD-03 ── OPS-01 ── TRACE-01
+  ├── PROD-01 ── PROD-06
+  │         └── PROD-03 ── OPS-01 ── TRACE-01
   │                 │          ├── OPS-02 ── COST-01 ── COST-02 ── COST-03
   │                 │          ├── OPS-03
   │                 │          └── OPS-04
@@ -118,29 +122,30 @@ The order is dependency-aware and not a schedule.
 | Step | Feature | Outcome |
 | --- | --- | --- |
 | 1 | CORE-01 | Single-user application shell on the existing API and database |
-| 2 | PROD-01 | Quintas, vidrieras, and canteros |
-| 3 | PROD-03 | One active cultivation cycle per vidriera |
-| 4 | OPS-01 | An operation recorded against that vidriera |
-| 5 | TRACE-01 | The operation visible in vidriera and cycle history |
+| 2 | PROD-01 | Quintas, vidrieras, canteros, and stable operational codes |
+| 3 | PROD-06 | Approximate geographic boundaries on a satellite or aerial map |
+| 4 | PROD-03 | One active cultivation cycle per vidriera |
+| 5 | OPS-01 | An operation recorded against that vidriera |
+| 6 | TRACE-01 | The operation visible in vidriera and cycle history |
 
-Steps 1–5 are the first usable flow. CORE-02 is part of the first MVP and comes immediately after that flow, before structured quantities. Stage 1 continues as follows:
+Steps 1–6 are the first usable flow. CORE-02 is part of the first MVP and comes immediately after that flow, before structured quantities. Stage 1 continues as follows:
 
 | Step | Feature | Outcome |
 | --- | --- | --- |
-| 6 | CORE-02 | Controlled units, including ramo and vara with no global conversion |
-| 7 | PROD-02 | Crops and varieties |
-| 8 | INV-01 | Product catalog |
-| 9 | OPS-02 | Structured fields per operation type |
-| 10 | CORE-03 | People and roles |
-| 11 | OPS-04 | Performers and responsible persons |
-| 12 | PROD-05 | Medianero assignment history |
-| 13 | PROD-04 | Variety allocation inside the cycle |
-| 14 | OPS-03 | One operation covering several vidrieras |
-| 15 | TRACE-02 | Photographs on observations and other operations |
+| 7 | CORE-02 | Controlled units, including ramo and vara with no global conversion |
+| 8 | PROD-02 | Crops and varieties |
+| 9 | INV-01 | Product catalog |
+| 10 | OPS-02 | Structured fields per operation type |
+| 11 | CORE-03 | People and roles |
+| 12 | OPS-04 | Performers and responsible persons |
+| 13 | PROD-05 | Medianero assignment history |
+| 14 | PROD-04 | Variety allocation inside the cycle |
+| 15 | OPS-03 | One operation covering several vidrieras |
+| 16 | TRACE-02 | Photographs on observations and other operations |
 
 Stage 2, in order: HARV-01, HARV-02, HARV-03, HARV-04.
 
-Stage 3, in order: INV-02, INV-03, INV-04, COST-01, COST-02. COST-01 also depends on OPS-02, which is already in place after step 9.
+Stage 3, in order: INV-02, INV-03, INV-04, COST-01, COST-02. COST-01 also depends on OPS-02, which is already in place after step 10.
 
 Stage 4, in order: COMM-01, COMM-02, COMM-03, COMM-04, COMM-05, COST-03. COMM-02 can be built in parallel with COMM-01 after CORE-01, and it should still ship as part of Stage 4 so sales are not a disconnected list.
 
@@ -150,7 +155,8 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 
 | Feature | Safe to build | Wait for |
 | --- | --- | --- |
-| PROD-01 | Four canteros per vidriera | Resolved by OQ-21 |
+| PROD-01 | Four canteros per vidriera, with stable codes | Resolved by OQ-21 |
+| PROD-06 | Approximate boundaries; warn on overlap until OQ-30 is decided | OQ-29 before the imagery client |
 | PROD-04 | Several varieties per cantero, without a measured share | OQ-02 before area, length, or plant-count portions |
 | PROD-05 | One medianero, or direct management | OQ-12 before extra required fields |
 | OPS-02 | Manual structured records | OQ-07 and OQ-08 before device or schedule truth |
@@ -169,4 +175,5 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 | Development foundation: Compose, CI, health check, empty Alembic | Present in the repository. Not a product feature. |
 | CORE-01 application shell, loopback binding, optional access secret, backup scripts | In Progress on the feature branch. Not integrated. |
 | Stage 1–4 features in the tables above, except CORE-01 | Planned |
-| Maps, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |
+| PROD-06 farm map | Planned. Stage 1. Specification linked above. |
+| Satellite analysis beyond locating units, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |

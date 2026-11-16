@@ -38,6 +38,8 @@ Do not convert an open question into a rule inside code.
 | [OQ-26](#oq-26) | Commercial presentations | High | Open, non-blocking |
 | [OQ-27](#oq-27) | Reports for the first pilot | Medium | Open, non-blocking |
 | [OQ-28](#oq-28) | Separate portions of one variety and color | Medium | Open, non-blocking |
+| [OQ-29](#oq-29) | Satellite imagery provider | High | Open, blocking for the imagery client |
+| [OQ-30](#oq-30) | Overlapping approximate polygons | Medium | Open, non-blocking |
 
 ## Resolved
 
@@ -294,3 +296,21 @@ Do not convert an open question into a rule inside code.
 - Blocking: Non-blocking. The first version stores one logical allocation per variety and color on a cantero and cycle.
 - Current knowledge: A cantero may hold several varieties. Treating one variety and color as one row is a simplification. It is not a claim that two separate plantings of that combination cannot exist in the same bed.
 - Required validation: Ask whether operators need to tell those portions apart before yield is compared at a finer grain than the cantero. Historical rows must remain readable if separate identities are added later. Do not add bed geometry to answer this.
+
+<a id="oq-29"></a>
+### OQ-29 — Which satellite or aerial imagery provider should the map use?
+
+- Affected features: [PROD-06](features/PROD-06-farm-visual-mapping.md)
+- Importance: High
+- Blocking: Blocking for the provider-specific imagery client. Geometry, identifiers, and the mapping workflow are already specified and stay vendor-neutral.
+- Current knowledge: The basemap must be satellite or aerial imagery, good enough to recognize terrain, roads, and buildings around Villa Elisa and Arturo Seguí. It does not need to be recent or survey-grade. The operator does not upload the base image. Candidates include MapTiler, Mapbox, Google Maps if a current API and its terms fit, and other legitimate satellite or aerial tile services. Standard OpenStreetMap tiles are not satellite imagery. No vendor, plan, or price is approved. The map needs a network connection. Saved polygons must not depend on storing the tiles.
+- Required validation: Compare providers before PROD-06 implementation on imagery availability in Argentina, visual detail for Villa Elisa and Arturo Seguí, commercial or internal licensing, price and usage limits, how credentials are issued and kept out of the browser bundle, attribution, compatibility with the chosen map library, ability to replace the provider without redrawing GeoJSON, and the operational dependency on internet access. Do not adopt a deprecated API. Do not treat imagery as free for commercial use without a license that says so.
+
+<a id="oq-30"></a>
+### OQ-30 — Should overlapping or slightly overflowing polygons be rejected?
+
+- Affected features: [PROD-06](features/PROD-06-farm-visual-mapping.md)
+- Importance: Medium
+- Blocking: Non-blocking. Until this is answered, overlap and a small extension past the quinta boundary produce a visible warning and the drawn polygon is stored unchanged.
+- Current knowledge: Boundaries are approximate. A structurally invalid ring is already a hard error. A vidriera polygon that does not intersect its quinta at all is already rejected. Overlap between neighboring greenhouses, and a line that wanders slightly outside the quinta, are the undecided cases. The product must not clip those rings silently.
+- Required validation: Ask the business whether those approximate conflicts should stay warnings or block the save. Either answer must keep the technical identifier and the operational code stable.

@@ -21,7 +21,35 @@ A **vidriera** is the primary functional production unit. Each quinta contains m
 
 A **cantero** is a physical subdivision of a vidriera. Each vidriera has four canteros. A cantero can hold more than one variety at the same time. Canteros matter for where crops are placed, how harvesting progresses, and how performance is measured. Harvesting may cut part of a variety inside a cantero while other plants in that bed remain. A harvested portion stays empty until a later planting cycle. The cut does not open a new cultivation cycle.
 
-The physical structure is independent from time. Renaming a bed or changing who is responsible does not rewrite past cycles.
+The physical structure is independent from time, from who is responsible, and from any map. Renaming a display label or changing who is responsible does not rewrite past cycles.
+
+### Identity and operational codes
+
+Each quinta and each vidriera has an immutable technical identifier and a separate operational code. The code is what people use. The identifier is what other records point at.
+
+A quinta code is a short unique business code, such as `VE` for Villa Elisa or `AS` for Arturo Seguí. Those examples are not seeded fixtures.
+
+A vidriera code combines the quinta code with a sequence number that is unique inside that quinta: `VE-V001`, `VE-V002`, `AS-V001`. The number is assigned at creation, is not reused after deactivation, and does not claim a physical order on the ground. There is no fixed maximum.
+
+A cantero is numbered 1 to 4 inside its vidriera. A display label such as `VE-V001-C1` can be derived from the parent code and that number. The cantero's technical identifier does not depend on the label.
+
+A descriptive name or location note may change. The technical identifier and the operational code do not. Moving a vidriera to another quinta is not a descriptive edit. It would attach the section to a different property and would conflict with the code. The normal edit path does not do it.
+
+### Geographic identification
+
+A quinta and a vidriera may each have one approximate geographic boundary. The boundary is optional. It is not the record's identity, and it is not required to create the record.
+
+Boundaries are stored as geographic coordinates so they survive a change of satellite imagery. Imagery itself is a basemap from an external provider. It does not need to be current. The operator does not supply the base image.
+
+A drawn polygon should normally fall inside its quinta, but manual boundaries are approximate. Invalid shapes are rejected. A shape is not silently rewritten to look tidy. Overlap between vidrieras, and a small extension past the quinta edge, stay visible as warnings until [OQ-30](../OPEN_QUESTIONS.md#oq-30) is decided.
+
+Three areas stay distinct:
+
+- The area computed from a polygon, which is only an approximate footprint.
+- The measured physical area, entered when someone has measured it.
+- The productive or cultivated area, which this model does not infer from the map.
+
+Canteros are not given polygons in the first map. [PROD-06](../features/PROD-06-farm-visual-mapping.md) owns the mapping behavior. [PROD-01](../features/PROD-01-farms-vidrieras-beds.md) owns the records and the codes.
 
 ### Cultivation cycles
 
@@ -64,7 +92,7 @@ These are safe for the first implementation slices. They are not additional conf
 
 - How to measure one variety's share of a cantero ([OQ-02](../OPEN_QUESTIONS.md#oq-02)).
 - The measured area of each vidriera and cantero. Absence of a number is not zero area.
-- Names, counts, and internal codes of vidrieras beyond the two quintas. Those are entered by the business; they are not seeded.
+- The actual quinta codes, vidriera counts, and descriptive names. The code convention is defined. The values are entered by the business and are not seeded.
 - Which commercial presentations exist for each flower type ([OQ-26](../OPEN_QUESTIONS.md#oq-26)).
 
 ## Implications for the software
@@ -74,5 +102,8 @@ These are safe for the first implementation slices. They are not additional conf
 - Keep finalized cycles and their allocations.
 - Do not copy an operation onto each cantero or variety.
 - Allow more than one variety allocation on the same cantero in the same cycle.
-- In the first version, store one logical allocation per variety and color on a cantero and cycle. That limit is a simplification. A later version may give physically separate portions their own allocation identities without rewriting history. Do not add geometry for that case now.
+- In the first version, store one logical allocation per variety and color on a cantero and cycle. That limit is a simplification. A later version may give physically separate portions their own allocation identities without rewriting history. Do not add cantero geometry to represent those portions.
+- Keep operational codes stable when a display name, a cycle, a crop, a medianero, or a descriptive location changes.
+- Do not reuse an operational code after deactivation.
+- Treat map geometry as optional and approximate. Do not copy a polygon's computed area into a measured area or a yield figure.
 - Keep commercial size off the planting record.

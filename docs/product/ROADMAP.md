@@ -10,9 +10,9 @@ Nothing in these stages is implemented. The repository contains only the applica
 
 The first usable release is a vertical slice, not the whole stage:
 
-create a vidriera, start a cultivation cycle, register an operation, review its history.
+create a vidriera, locate it on a map, start a cultivation cycle, register an operation, review its history.
 
-That slice is CORE-01, PROD-01, PROD-03, OPS-01, and TRACE-01. The rest of the stage makes the record precise enough to trust: units, crops, products, structured operation types, people, responsibilities, shared operations, and photographs.
+That slice is CORE-01, PROD-01, PROD-06, PROD-03, OPS-01, and TRACE-01. The rest of the stage makes the record precise enough to trust: units, crops, products, structured operation types, people, responsibilities, shared operations, and photographs.
 
 | ID | Name |
 | --- | --- |
@@ -20,6 +20,7 @@ That slice is CORE-01, PROD-01, PROD-03, OPS-01, and TRACE-01. The rest of the s
 | [CORE-02](../features/CORE-02-units-of-measurement.md) | Units of Measurement |
 | [CORE-03](../features/CORE-03-people-and-roles.md) | People & Roles Registry |
 | [PROD-01](../features/PROD-01-farms-vidrieras-beds.md) | Farms, Vidrieras & Beds |
+| [PROD-06](../features/PROD-06-farm-visual-mapping.md) | Farm Visual Mapping |
 | [PROD-02](../features/PROD-02-crop-variety-catalog.md) | Flower Type, Variety & Classifications |
 | [PROD-03](../features/PROD-03-cultivation-cycles.md) | Cultivation Cycle Management |
 | [PROD-04](../features/PROD-04-crop-allocation.md) | Crop Allocation Within a Cycle |
@@ -90,8 +91,7 @@ These items have no feature specification and no delivery commitment. Descriptio
 | --- | --- | --- |
 | Multi-user access | CORE-01, CORE-03 | Accounts and authorization after the single-user MVP. People remain business records. |
 | Mobile interfaces | The desktop MVP | A phone layout and field entry. Not required for Stages 1–4. |
-| Interactive production map | PROD-01 | Navigation across physical areas. Not required for Stage 1. |
-| Spatial geometry of vidrieras and beds | PROD-01 | Shapes and coordinates. Area used for yield can exist as a measured number before geometry exists. |
+| Satellite and remote-sensing analysis | PROD-06 | Crop indices, historical imagery, and automated detection. Distinct from the Stage 1 map, which only locates quintas and vidrieras. |
 | Agricultural experiment management | PROD-03, OPS-01, HARV-04 | Name a trial, the cycles it covers, and the practice being compared. |
 | Statistical production analysis | HARV-04 | Formal analysis beyond the Stage 2 comparison. Must still separate association from causation. |
 | IoT sensors | OPS-01, TRACE-01 | Store sensor readings as observations. A reading is not automatically an operation. |

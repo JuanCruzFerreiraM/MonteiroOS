@@ -9,7 +9,7 @@ Modules are boundaries inside the modular monolith. They are not services. Creat
 | Access | The desktop shell, health, basic deployment protection, and backup | Business roles, accounts, vidrieras, operations |
 | Measurement | Dimensions, units, conversion | Quantities of particular events |
 | People | Persons and role intervals | Login credentials, vidriera assignments |
-| Production | Quintas, vidrieras, canteros, crops, varieties, cycles, allocations, medianero assignments | Operations, harvest quantities |
+| Production | Quintas, vidrieras, canteros, their codes, their optional geographic boundaries, crops, varieties, cycles, allocations, medianero assignments | Operations, harvest quantities, a second map-only place entity |
 | Product catalog | Products and categories | Stock balances |
 | Operations | Operations, scopes, type-specific data, participants, attachments | Yield totals, stock withdrawals |
 | Harvest | Harvest events, measurements, quality classes, yield and comparison reads | Box packing, prices |
@@ -65,7 +65,7 @@ Access is required by every user-facing feature. It is omitted from the later ar
 | CORE-01 | Access |
 | CORE-02 | Measurement |
 | CORE-03 | People |
-| PROD-01 – PROD-05 | Production |
+| PROD-01 – PROD-06 | Production |
 | INV-01 | Product catalog |
 | INV-02 – INV-04 | Inventory |
 | OPS-01 – OPS-04, TRACE-01, TRACE-02 | Operations |
@@ -78,3 +78,7 @@ Access is required by every user-facing feature. It is omitted from the later ar
 Follow [FEATURES.md](../../FEATURES.md). The first packages are Access and Production, then Operations. Measurement, Product catalog, and People follow before structured applications. Harvest, Inventory, Cost, and Commercial wait for their stages.
 
 No package is created as an empty placeholder in the bootstrap.
+
+## Feature dependency for mapping
+
+PROD-06 depends on PROD-01, and PROD-01 depends on CORE-01. PROD-06 does not depend on cycles, operations, or harvests. PROD-03 does not depend on PROD-06. The chain stays acyclic: PROD-06 reads and writes geometry on Production's existing quinta and vidriera records.

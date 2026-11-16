@@ -92,6 +92,8 @@ Features that introduce durable state add SQLAlchemy models on the existing `Bas
 
 The conceptual model is not a command to create one table per noun. A specification's data requirements are the business facts to persist. Physical table design happens during implementation, inside those requirements.
 
+PROD-06 persists approximate GeoJSON boundaries in that same PostgreSQL database. The first mapping release does not add PostGIS and does not store satellite tiles. Imagery is requested from an external provider when the map is open. The provider is selected before that feature is coded, not by this overview.
+
 ## File storage
 
 TRACE-02 is the first feature that needs files. Photographs belong in an object-storage or filesystem location behind the API, with metadata in PostgreSQL. The concrete store is chosen in that feature. It is not introduced before then.
