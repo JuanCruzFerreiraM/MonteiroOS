@@ -7,20 +7,20 @@ Monteiro OS is a modular monolith. One backend process and one web application a
 ## Implemented today
 
 ```text
-browser → Next.js shell → server-side GET /health
+browser → Next.js shell → server-side API calls
                 FastAPI → PostgreSQL
 ```
 
 | Piece | What exists |
 | --- | --- |
-| Frontend | Next.js 16 desktop shell. A sidebar lists Inicio as the only working destination. Other sections are visible and marked unavailable. The home page reports API and database health. Tailwind CSS 4 supplies a small set of interface colors. There is no logo and no domain screen. |
-| Backend | One FastAPI process. The only route is `GET /health`. When `APP_ACCESS_SECRET` is set, other paths require `X-Monteiro-Access` before they run. |
-| Persistence | PostgreSQL 18. The Compose volume is mounted at `/var/lib/postgresql`, which is the path that image requires. SQLAlchemy 2 opens a connection with `pool_pre_ping` and provides a session factory. `Base` is an empty declarative base. Alembic is configured and `backend/alembic/versions/` has no revisions. Backup and restore are in [BACKUP.md](../development/BACKUP.md). |
+| Frontend | Next.js 16 desktop shell. Inicio and Producción are working destinations. Other sections are visible and marked unavailable. Producción registers quintas, vidrieras, and canteros. The home page reports API and database health. Tailwind CSS 4 supplies a small set of interface colors. There is no logo. |
+| Backend | One FastAPI process. `GET /health` stays public. Production routes live under `/api/production`. When `APP_ACCESS_SECRET` is set, every route except health requires `X-Monteiro-Access` before it runs. |
+| Persistence | PostgreSQL 18. The Compose volume is mounted at `/var/lib/postgresql`, which is the path that image requires. SQLAlchemy 2 opens a connection with `pool_pre_ping` and provides a session factory. Alembic revision `0001_production_hierarchy` creates `quintas`, `vidrieras`, and `canteros`. There is no PostGIS and no geometry column. Backup and restore are in [BACKUP.md](../development/BACKUP.md). |
 | Configuration | Environment variables with local defaults. See `.env.example`. `DATABASE_URL`, when set, replaces the `POSTGRES_*` pieces. |
 | Delivery | Docker Compose for the web app, API, and database. Published ports bind to `127.0.0.1`. GitHub Actions jobs named `backend` and `frontend`. |
-| Tests | Pytest hits a real PostgreSQL. Health returns ok when `SELECT 1` works and 503 when it does not. Access tests cover the optional secret. Frontend unit tests cover navigation and the shell. |
+| Tests | Pytest hits a real PostgreSQL, including an isolated database for the production schema. Health returns ok when `SELECT 1` works and 503 when it does not. Access tests cover the optional secret. Frontend unit tests cover navigation, the shell, and the production screens. |
 
-There is no account directory, no file storage, no queue, no cache, and no domain table. The shell is single-user and desktop-first. Deployment protection is loopback binding plus an optional shared secret, not multi-user authorization. See [ADR 0009](../decisions/0009-single-user-desktop-first.md).
+There is no account directory, no file storage, no queue, no cache, and no geometry table. The shell is single-user and desktop-first. Deployment protection is loopback binding plus an optional shared secret, not multi-user authorization. See [ADR 0009](../decisions/0009-single-user-desktop-first.md).
 
 Backend layout today:
 
@@ -28,9 +28,12 @@ Backend layout today:
 backend/
 ├── app/
 │   ├── main.py           application factory
-│   ├── api/              HTTP routes
-│   └── core/             settings, database, deployment access
+│   ├── api/              health route
+│   ├── core/             settings, database, deployment access
+│   └── modules/
+│       └── production/   quintas, vidrieras, canteros
 ├── alembic/
+│   └── versions/         0001_production_hierarchy
 └── tests/
 ```
 

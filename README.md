@@ -108,9 +108,9 @@ uv run ruff format --check .
 uv run alembic upgrade head
 ```
 
-`alembic upgrade head` applies no domain schema today because there are no revisions. It confirms that Alembic can reach the database.
+`uv run alembic upgrade head` applies the production hierarchy revision. It creates empty tables. It does not load business records.
 
-Create a revision only when a real model exists:
+Create a later revision when another model exists:
 
 ```bash
 uv run alembic revision --autogenerate -m "short description"

@@ -4,7 +4,7 @@
 - ID: PROD-01
 - Module: Production
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE`
 - Dependencies: CORE-01
@@ -137,6 +137,14 @@ Geographic coordinates are not facts of this feature.
 - PROD-06 consumes these records and attaches optional geometry. It must not create a second quinta or vidriera entity.
 - PROD-03, OPS-01, and TRACE-01 extend the vidriera detail and reference the technical identifier.
 - Domain model: [PRODUCTION_MODEL.md](../domain/PRODUCTION_MODEL.md).
+
+## Current implementation
+
+This branch is in progress. It is not integrated and the acceptance criteria above are not marked complete.
+
+The HTTP API lives at `/api/production`. Technical identifiers are UUID primary keys. Operational codes are separate columns and are not foreign keys. A vidriera and its four canteros are inserted in one transaction. Measured area is omitted until CORE-02, so this release does not store a free-text unit. Geographic columns are omitted until PROD-06. The existing primary keys and parent foreign keys are the records that feature will extend.
+
+Lists hide inactive records unless `include_inactive=true`. Detail routes still return an inactive record. There is no delete route.
 
 ## Open Questions
 
