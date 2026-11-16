@@ -4,21 +4,50 @@ Monteiro OS is the internal production-management platform for Monteiro, a famil
 
 The business needs a reliable record of what happened in each production section: which practices were used, which products were applied, what was harvested, and, later, what that production cost and what it sold for. The first goal is operational traceability. Later stages add harvest measurement, inventory, cost, and wholesale commercialization.
 
-This repository is the functional source of truth for that product. It currently contains the development foundation only. Production, harvest, inventory, and commercial modules are specified and not yet built.
+This repository is the functional source of truth for that product. The development foundation and the first production hierarchy are in the repository. Harvest, inventory, and commercial modules are specified and not yet built. PROD-01 is in progress on its feature branch until its acceptance criteria are verified.
 
 ## Current implementation
 
-The running system is a modular monolith foundation:
+The running system is a modular monolith:
 
-- A FastAPI application exposes `GET /health`. The endpoint returns `{"status": "ok"}` when PostgreSQL accepts `SELECT 1`, and `503` when it does not.
-- A Next.js application renders a single-user desktop shell in Spanish. Inicio is the only working destination. Later modules are listed as not available yet. The server reads `GET /health` and shows a failure when the API or the database is down.
-- SQLAlchemy and Alembic are configured. There are no domain models and no migration revisions.
-- Docker Compose runs PostgreSQL 18, the API, and the web app together.
+- A FastAPI application exposes `GET /health` and the Production API under `/api/production`. Health returns `{"status": "ok"}` when PostgreSQL accepts `SELECT 1`, including when the production tables do not exist yet. It returns `503` when PostgreSQL does not respond.
+- Production routes create and edit quintas, vidrieras, and canteros. SQLAlchemy models `Quinta`, `Vidriera`, and `Cantero` live in `backend/app/modules/production/models.py`. Primary keys are server-generated UUIDs. Operational codes are separate unique columns, not keys.
+- The first Alembic revision is `0001_production_hierarchy`. It creates `quintas`, `vidrieras`, and `canteros`, with foreign keys and the uniqueness and check constraints for codes, names, and cantero numbers. It does not insert business records and does not add geometry.
+- If that revision has not been applied, a Production request returns `503` and tells the operator to run `alembic upgrade head`. The response does not include SQL and is not an empty quinta list.
+- A Next.js application renders a single-user desktop shell in Spanish. Inicio and Producción are working destinations. The other modules stay listed as not available. Producción lists quintas, opens one quinta, creates a vidriera with four canteros, and edits descriptive data. There is no map.
+- Docker Compose runs PostgreSQL 18, the API, and the web app together. Compose does not apply Alembic.
 - GitHub Actions runs backend lint, format, and pytest, plus frontend lint and production build.
 
-There is no domain data and no logo. The shell uses a small set of interface colors, including a green accent, and is not a brand system. The MVP is single-user and desktop-first. It does not add accounts or a mobile client.
+There is no seeded business data and no logo. The shell uses a small set of interface colors, including a green accent, and is not a brand system. The MVP is single-user and desktop-first. It does not add accounts or a mobile client.
 
-Local Compose publishes the database, API, and web app on `127.0.0.1` only. `APP_ACCESS_SECRET` is optional. When it is set, backend routes other than `GET /health` require the header `X-Monteiro-Access`. The browser bundle does not receive the secret. See `.env.example` and [CORE-01](docs/features/CORE-01-application-foundation.md).
+### Production API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET`, `POST` | `/api/production/quintas` | List or create quintas |
+| `GET`, `PATCH` | `/api/production/quintas/{quinta_id}` | Read or edit a quinta |
+| `GET` | `/api/production/quintas/{quinta_id}/vidrieras` | List vidrieras in a quinta |
+| `GET` | `/api/production/quintas/{quinta_id}/vidrieras/next-code` | Suggest the next vidriera code |
+| `POST` | `/api/production/quintas/{quinta_id}/vidrieras` | Create a vidriera and its four canteros |
+| `GET`, `PATCH` | `/api/production/vidrieras/{vidriera_id}` | Read or edit a vidriera |
+| `PATCH` | `/api/production/canteros/{cantero_id}` | Edit a cantero name or active flag |
+
+Lists omit inactive records unless `include_inactive=true`. There is no delete route.
+
+### Production screens
+
+- `/produccion` lists quintas.
+- `/produccion/quintas/nueva` creates a quinta.
+- `/produccion/quintas/{quintaId}` shows that quinta and its vidrieras.
+- `/produccion/quintas/{quintaId}/vidrieras/nueva` suggests a code and creates a vidriera.
+- `/produccion/vidrieras/{vidrieraId}` shows the vidriera and canteros `C1` through `C4`.
+- Edit routes under those paths change descriptive data. A cantero edit cannot change its number or its vidriera.
+
+### Access boundary
+
+Local Compose publishes the database, API, and web app on `127.0.0.1` only. `APP_ACCESS_SECRET` is optional. When it is set, backend routes other than `GET /health` require the header `X-Monteiro-Access`. The Next.js server reads that secret from its own environment and attaches the header. The browser bundle does not receive it. Do not put it in a `NEXT_PUBLIC_` variable. See `.env.example` and [CORE-01](docs/features/CORE-01-application-foundation.md).
+
+The secret protects the API. It does not protect the web application. Pages and server actions call the API with the secret, so anyone who can open the frontend can use Production. The local loopback binding is what keeps that frontend private. An externally exposed frontend needs its own deployment protection, such as a network restriction or an equivalent control in front of the web app. Publishing the API beyond loopback without the secret is not a supported deployment. Publishing the frontend beyond loopback without its own restriction is not a supported deployment either.
 
 Database backup and restore use `pg_dump` and `pg_restore` through the Compose database service. The procedure and its safety rules are in [backup and restore](docs/development/BACKUP.md).
 
@@ -72,6 +101,26 @@ cp .env.example .env
 
 `.env` is optional when the defaults are acceptable. It is not committed. Variables are explained in `.env.example`.
 
+### Database schema
+
+Compose starts PostgreSQL without the production tables. Start the database with the commands in the next section, then apply the schema before using the Production screens:
+
+```bash
+cd backend
+uv sync
+uv run alembic upgrade head
+```
+
+`make migrate` runs the same upgrade. From a running backend container:
+
+```bash
+docker compose exec backend uv run alembic upgrade head
+```
+
+The upgrade creates empty `quintas`, `vidrieras`, and `canteros` tables. It does not load business records. `docker compose up` does not run it. Until it has run, `GET /health` can still succeed, and Producción reports that the schema is missing instead of showing an empty farm.
+
+Use the same `DATABASE_URL` or `POSTGRES_*` values the API uses. Do not run `alembic downgrade` against a database that already holds business records.
+
 ### Run and stop
 
 ```bash
@@ -108,7 +157,7 @@ uv run ruff format --check .
 uv run alembic upgrade head
 ```
 
-`uv run alembic upgrade head` applies the production hierarchy revision. It creates empty tables. It does not load business records.
+`uv run alembic upgrade head` is required before the Production screens. It applies `0001_production_hierarchy` and creates empty tables. It does not load business records.
 
 Create a later revision when another model exists:
 
@@ -151,7 +200,7 @@ Hooks cover repository hygiene, Ruff, and frontend lint and format. They do not 
 | Environment | Docker Compose |
 | CI | GitHub Actions, jobs `backend` and `frontend` |
 
-Domain modules will live inside this backend and this frontend. They will not be separate services. See [architecture overview](docs/architecture/OVERVIEW.md).
+The Production module lives inside this backend and this frontend. Later modules will too. They are not separate services. See [architecture overview](docs/architecture/OVERVIEW.md).
 
 ## Repository layout
 

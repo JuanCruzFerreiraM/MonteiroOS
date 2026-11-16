@@ -11,7 +11,7 @@ from starlette.responses import Response
 
 from app.core.config import get_settings
 from app.core.database import get_db_session
-from app.main import create_app
+from app.main import SCHEMA_NOT_APPLIED_DETAIL, create_app
 from app.modules.production import services
 from tests.db_isolation import (
     create_isolated_database,
@@ -389,6 +389,44 @@ def test_access_secret_protects_production_routes(
     assert allowed.status_code == 200
     assert allowed.json() == []
     assert health.status_code == 200
+
+
+def test_missing_schema_does_not_look_like_an_empty_farm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ACCESS_SECRET", "")
+    get_settings.cache_clear()
+    name, url = create_isolated_database()
+    connected = create_engine(url, pool_pre_ping=True)
+    sessions = sessionmaker(bind=connected, autoflush=False, expire_on_commit=False)
+
+    def override_session():
+        session = sessions()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    application = create_app()
+    application.dependency_overrides[get_db_session] = override_session
+    try:
+        with TestClient(application, raise_server_exceptions=False) as test_client:
+            listing = test_client.get("/api/production/quintas")
+            created = test_client.post(
+                "/api/production/quintas",
+                json={"code": "VE", "name": "Villa Elisa"},
+            )
+    finally:
+        get_settings.cache_clear()
+        connected.dispose()
+        drop_isolated_database(name)
+
+    assert listing.status_code == 503
+    assert listing.json() == {"detail": SCHEMA_NOT_APPLIED_DETAIL}
+    assert "SELECT" not in listing.text
+    assert "psycopg" not in listing.text
+    assert created.status_code == 503
+    assert created.json()["detail"] == SCHEMA_NOT_APPLIED_DETAIL
 
 
 def test_migration_upgrade_downgrade_and_database_constraints() -> None:

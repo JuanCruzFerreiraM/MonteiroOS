@@ -146,6 +146,8 @@ The HTTP API lives at `/api/production`. Technical identifiers are UUID primary 
 
 Lists hide inactive records unless `include_inactive=true`. Detail routes still return an inactive record. There is no delete route.
 
+The tables come from Alembic revision `0001_production_hierarchy`. The application does not create them on startup. Before the upgrade, Production routes return `503` and the screens show that message. They do not show an empty quinta list. `GET /health` still reports database connectivity.
+
 ## Open Questions
 
 - [OQ-21](../OPEN_QUESTIONS.md#oq-21) is resolved. A vidriera has four canteros.

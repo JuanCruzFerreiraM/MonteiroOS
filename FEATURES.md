@@ -15,7 +15,7 @@ Record what happens in each vidriera so the business can reconstruct a cultivati
 | Implemented | Integrated and acceptance criteria verified |
 | Deferred | Intentionally postponed |
 
-CORE-01 is **In Progress**. It is not integrated until its pull request is reviewed. Every other feature below is **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on.
+CORE-01 and PROD-01 are **In Progress**. Neither is **Implemented**. The other features below are **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on. PROD-01 adds the first revision, `0001_production_hierarchy`.
 
 ## Priority legend
 
