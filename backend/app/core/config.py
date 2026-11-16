@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Monteiro OS"
     app_env: str = "development"
+    app_access_secret: str = ""
     database_url: str | None = None
     postgres_user: str = "monteiro"
     postgres_password: str = "monteiro"

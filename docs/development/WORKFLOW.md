@@ -40,7 +40,7 @@ There is no extra GitFlow automation and no external tracker.
 | `Implemented` | Integrated, and the acceptance criteria have been verified. |
 | `Deferred` | Intentionally postponed. The specification stays. |
 
-Do not mark a feature `Implemented` because code was generated. The bootstrap shell does not satisfy CORE-01; that feature stays `Planned` until access and the application shell meet its criteria.
+Do not mark a feature `Implemented` because code was generated. CORE-01 stays `In Progress` until its pull request is reviewed and the acceptance criteria are verified on the integrated branch.
 
 Technical completion and field validation are different. A feature can be `Implemented` in the product while [OPEN_QUESTIONS.md](../OPEN_QUESTIONS.md) still requires a business check, as long as the specification did not depend on that answer. Say so in the pull request.
 
@@ -73,7 +73,7 @@ The body explains why when the subject is not enough. A product change and an un
 | Job | What it runs |
 | --- | --- |
 | `backend` | `uv sync --frozen`, Ruff lint, Ruff format `--check`, pytest against PostgreSQL |
-| `frontend` | `npm ci`, ESLint, production build |
+| `frontend` | `npm ci`, ESLint, Vitest, production build |
 
 There is no deploy, image publish, or coverage threshold. The check names to require in GitHub are `backend` and `frontend`.
 
@@ -123,7 +123,16 @@ cd backend
 uv run pytest
 ```
 
-`GET /health` returns `{"status": "ok"}` only when `SELECT 1` succeeds. If the database is unreachable, the endpoint returns `503`.
+`GET /health` returns `{"status": "ok"}` only when `SELECT 1` succeeds. If the database is unreachable, the endpoint returns `503`. That route stays public. When `APP_ACCESS_SECRET` is set, every other route requires `X-Monteiro-Access`.
+
+Frontend unit tests:
+
+```bash
+cd frontend
+npm test
+```
+
+The database backup round trip, with Compose up, is `scripts/verify-backup-restore.sh`. It uses throwaway databases and does not restore over the primary database. See [BACKUP.md](BACKUP.md). The GitHub `backend` job does not run that script: the runner does not provide a PostgreSQL 18 client, and the script is meant to execute inside the Compose database container.
 
 Feature work adds tests for the acceptance criteria that can run automatically, including rejected duplicates, overlapping cycles, and incompatible units.
 

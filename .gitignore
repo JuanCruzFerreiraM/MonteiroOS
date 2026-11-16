@@ -28,6 +28,9 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 
+# Database dumps
+backups/
+
 # Logs
 *.log
 npm-debug.log*

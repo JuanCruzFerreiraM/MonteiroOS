@@ -4,7 +4,7 @@
 - ID: CORE-01
 - Module: Access
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE` `INFRA`
 - Dependencies: None
@@ -97,3 +97,14 @@ No person or account catalog.
 ## Open Questions
 
 None for this feature. [OQ-20](../OPEN_QUESTIONS.md#oq-20) records the deferred multi-user and mobile decision.
+
+## Implementation notes
+
+Status stays `In Progress` until this branch is reviewed and the pull request checks are green. The behavior below is what the branch contains.
+
+- The web app replaces the placeholder with a desktop shell: sidebar, heading, and main region. The layout is at least 1280 pixels wide. Copy is Spanish. `lang` remains `es`.
+- Navigation is a single list in `frontend/src/navigation/navigation.ts`. Inicio is the only enabled destination. Producción, Operaciones, Cosechas, Inventario, Comercialización, and Configuración are visible and labeled "Aún no disponible". They have no route and no sample business data. A later feature enables an item by setting `available` and `href`.
+- The home page reads `GET /health` on the server. A database or backend failure is shown as a failure. It is not presented as an empty production history.
+- Local Compose publishes the database, API, and web ports on `127.0.0.1` only. That is the local network restriction.
+- `APP_ACCESS_SECRET`, when set to a non-blank value, makes every backend route except `GET /health` require the header `X-Monteiro-Access`. The Next.js server may send that header from its own environment. The value is not a `NEXT_PUBLIC_` variable, not a browser token, and not a user account. When the secret is unset, the API does not add a login; loopback binding is the local boundary. Publishing the API beyond loopback without the secret is not a supported deployment.
+- Backup and restore are documented in [BACKUP.md](../development/BACKUP.md). The restore script refuses the primary database.

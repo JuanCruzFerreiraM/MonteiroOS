@@ -15,7 +15,7 @@ Record what happens in each vidriera so the business can reconstruct a cultivati
 | Implemented | Integrated and acceptance criteria verified |
 | Deferred | Intentionally postponed |
 
-Every feature below is **Planned**. The repository does not yet implement any of them. The running health check, placeholder page, PostgreSQL connection, and Alembic setup are bootstrap infrastructure. They are evidence for CORE-01, not completion of it.
+CORE-01 is **In Progress**. It is not integrated until its pull request is reviewed. Every other feature below is **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on.
 
 ## Priority legend
 
@@ -41,7 +41,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 
 | ID | Name | Priority | Status | Domains | Specification |
 | --- | --- | --- | --- | --- | --- |
-| CORE-01 | Application Foundation | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` `INFRA` | [spec](docs/features/CORE-01-application-foundation.md) |
+| CORE-01 | Application Foundation | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` `INFRA` | [spec](docs/features/CORE-01-application-foundation.md) |
 | CORE-02 | Units of Measurement | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-02-units-of-measurement.md) |
 | CORE-03 | People & Roles Registry | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-03-people-and-roles.md) |
 | PROD-01 | Farms, Vidrieras & Beds | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
@@ -166,6 +166,7 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 
 | Capability | State |
 | --- | --- |
-| Development foundation: Compose, CI, health check, empty Alembic, placeholder page | Present in the repository. Not a product feature. |
-| Stage 1–4 features in the tables above | Planned |
+| Development foundation: Compose, CI, health check, empty Alembic | Present in the repository. Not a product feature. |
+| CORE-01 application shell, loopback binding, optional access secret, backup scripts | In Progress on the feature branch. Not integrated. |
+| Stage 1–4 features in the tables above, except CORE-01 | Planned |
 | Maps, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |

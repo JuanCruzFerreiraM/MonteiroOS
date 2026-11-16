@@ -11,12 +11,16 @@ This repository is the functional source of truth for that product. It currently
 The running system is a modular monolith foundation:
 
 - A FastAPI application exposes `GET /health`. The endpoint returns `{"status": "ok"}` when PostgreSQL accepts `SELECT 1`, and `503` when it does not.
-- A Next.js application renders a single placeholder page. It has no business navigation, screens, or API calls.
+- A Next.js application renders a single-user desktop shell in Spanish. Inicio is the only working destination. Later modules are listed as not available yet. The server reads `GET /health` and shows a failure when the API or the database is down.
 - SQLAlchemy and Alembic are configured. There are no domain models and no migration revisions.
 - Docker Compose runs PostgreSQL 18, the API, and the web app together.
 - GitHub Actions runs backend lint, format, and pytest, plus frontend lint and production build.
 
-There is no domain data and no brand asset or color system in the repository. The UI copy on the placeholder page is Spanish. The planned MVP is single-user and desktop-first. It does not add accounts or a mobile client.
+There is no domain data and no logo. The shell uses a small set of interface colors, including a green accent, and is not a brand system. The MVP is single-user and desktop-first. It does not add accounts or a mobile client.
+
+Local Compose publishes the database, API, and web app on `127.0.0.1` only. `APP_ACCESS_SECRET` is optional. When it is set, backend routes other than `GET /health` require the header `X-Monteiro-Access`. The browser bundle does not receive the secret. See `.env.example` and [CORE-01](docs/features/CORE-01-application-foundation.md).
+
+Database backup and restore use `pg_dump` and `pg_restore` through the Compose database service. The procedure and its safety rules are in [backup and restore](docs/development/BACKUP.md).
 
 ## Product scope
 
@@ -84,7 +88,7 @@ docker compose ps
 docker compose down
 ```
 
-`docker compose down` keeps the PostgreSQL volume. `docker compose down -v` deletes it.
+`docker compose down` keeps the PostgreSQL volume. `docker compose down -v` deletes it. The volume is mounted at `/var/lib/postgresql` because the PostgreSQL 18 image stores each major version in its own subdirectory and rejects a mount directly on `/var/lib/postgresql/data`.
 
 If port 5432 is already in use, change `POSTGRES_PORT` in `.env` before starting Compose. The backend container still connects to the `db` service. The published port matters only for tools running on the host.
 
@@ -125,7 +129,7 @@ npm run build
 npm run dev
 ```
 
-`npm run dev` is only needed to run the web app outside Docker.
+`npm run dev` is only needed to run the web app outside Docker. It calls the API at `BACKEND_URL`, or `http://127.0.0.1:8000` when that variable is empty. `npm test` runs the shell unit tests.
 
 ### Pre-commit
 
