@@ -61,7 +61,7 @@ The first software operator is one internal user at a desktop. Employees and med
 
 ## Boundaries
 
-In scope for the committed roadmap: production structure, cultivation cycles, operations, observations, harvest measurement, a product catalog, inventory, production cost, and wholesale commercialization through delivery and basic receipts.
+In scope for the committed roadmap: production structure, geographic location of quintas and vidrieras, cultivation cycles, operations, observations, harvest measurement, a product catalog, inventory, production cost, and wholesale commercialization through delivery and basic receipts.
 
 Out of scope until a later explicit requirement:
 

@@ -11,7 +11,8 @@ Terms are defined in the [glossary](../product/GLOSSARY.md).
 | Deployment protection and backup | Access | CORE-01 |
 | Measurement dimension, unit | Measurement | CORE-02 |
 | Person, role interval | People | CORE-03 |
-| Quinta, vidriera, cantero | Production | PROD-01 |
+| Quinta, vidriera, cantero, and their technical identifiers and operational codes | Production | PROD-01 |
+| Quinta boundary, vidriera boundary | Production | PROD-06 |
 | Flower type, variety, color, commercial size, presentation | Production | PROD-02 |
 | Cultivation cycle | Production | PROD-03 |
 | Crop allocation | Production | PROD-04 |
@@ -35,10 +36,16 @@ Traceability views (TRACE-01, COMM-05, HARV-03, HARV-04, COST-03) do not own a p
 
 ## Physical structure and time
 
+A quinta and a vidriera each have an immutable technical identifier and a stable operational code. A cantero has an immutable technical identifier and a number from 1 to 4. Display labels and location notes are not keys. Codes are not reused after deactivation.
+
+Geographic boundaries are optional and belong to the same Production records. A quinta has at most one boundary. A vidriera has at most one boundary, and only on a quinta that itself has a boundary. A cantero has none in PROD-06. The boundary is GeoJSON in WGS84 longitude and latitude. It is not a second quinta or vidriera, and it is not a measured area.
+
 ```mermaid
 erDiagram
   QUINTA ||--|{ VIDRIERA : contains
+  QUINTA ||--o| QUINTA_BOUNDARY : "optional footprint"
   VIDRIERA ||--|{ CANTERO : contains
+  VIDRIERA ||--o| VIDRIERA_BOUNDARY : "optional footprint"
   VIDRIERA ||--o{ CULTIVATION_CYCLE : "has history"
   CULTIVATION_CYCLE ||--o{ CROP_ALLOCATION : includes
   CANTERO ||--o{ CROP_ALLOCATION : "receives in a cycle"
@@ -98,9 +105,12 @@ A box content with no harvest lot is an explicit unknown origin, not a missing r
 
 | Rule | Reason |
 | --- | --- |
-| Quinta name is unique. | The two properties, and any later property, need a stable identity. |
-| Vidriera name is unique within a quinta. | Operators refer to sections by name. |
-| Cantero label is unique within a vidriera. | Harvest and allocation must point at one bed. |
+| Quinta operational code is unique, including inactive quintas, and is not reused. | Everyday identity must keep pointing at the same property. |
+| Quinta descriptive name is unique. | The properties still need distinct names. The name is not the code. |
+| Vidriera operational code is unique, including inactive vidrieras, and is not reused. The numeric part is unique within the parent quinta. | A code such as `VE-V001` must not be reassigned after deactivation. |
+| Vidriera descriptive name is unique within a quinta. | Operators also refer to sections by name. The name is not the code. |
+| Cantero number is unique within a vidriera and is one of 1, 2, 3, or 4. | Harvest and allocation must point at one bed. The derived label is not the key. |
+| A quinta or vidriera boundary, when present, belongs to exactly one of those records. | The map must not invent a parallel place. |
 | At most one active cultivation cycle per vidriera. | Confirmed operating rule. |
 | Cycle date ranges for the same vidriera do not overlap. | Two active periods would make history ambiguous. |
 | A cycle's allocation refers only to canteros of that cycle's vidriera. | Prevents cross-section allocations. |
@@ -135,6 +145,7 @@ Deleting a record that other history points at is rejected. The user deactivates
 
 - Software accounts, a permission matrix, and mobile-specific clients. The MVP is single-user and desktop-first.
 - A medianero contract or settlement formula.
-- A sensor, schedule engine, or map geometry.
+- A separate map entity, a stored satellite image, or a cantero polygon. Quinta and vidriera boundaries are optional geometries on the production records.
+- A sensor or a schedule engine.
 - A universal vara count per ramo. A presentation may store an explicit count for itself.
 - A seeded variety, color, size, or quality-class list.

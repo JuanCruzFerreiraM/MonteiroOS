@@ -7,6 +7,12 @@ Spanish terms used in the operation are kept in the product language. English in
 | Quinta | A physical production property. The current properties are Villa Elisa and Arturo Seguí. Highest level of the physical hierarchy. |
 | Vidriera | The primary operational production section inside a quinta. Irrigation, product applications, and several environmental operations are shared across the vidriera. |
 | Cantero | A cultivation bed inside a vidriera. Each vidriera has four. A cantero may hold several varieties at once. |
+| Technical identifier | The immutable identifier of a quinta, vidriera, or cantero. Other records point at it. It is not the everyday name. |
+| Operational code | The stable human code for a quinta or vidriera, such as `VE` or `VE-V001`. Assigned at creation and not reused. A cantero is shown as `{vidriera code}-C{n}`; that label is derived from the parent code and the cantero number. |
+| Geographic boundary | An optional approximate polygon, in geographic coordinates, for one quinta or one vidriera. It is not the record's identity and it is not a measured area. |
+| Satellite/aerial basemap | Imagery from an external provider, used to recognize terrain and surroundings. It is not stored as the production record, and it does not have to be current. |
+| Mapped vidriera | A vidriera that has a geographic boundary. |
+| Unmapped vidriera | A vidriera that does not yet have a geographic boundary. It remains a normal production record. |
 | Flower type | A commercial kind of flower, such as chrysanthemum. Botanical identity is optional. Also called a crop. |
 | Variety | A commercial or local name for a specific flower variety. It belongs to a flower type. A botanical classification is optional. |
 | Color | An independent classification. It may be known at planting and recorded again at harvest. |
@@ -49,6 +55,8 @@ Spanish terms used in the operation are kept in the product language. English in
 ## Names that must stay distinct
 
 - Quinta, vidriera, and cantero are physical. A cultivation cycle is temporal.
+- A technical identifier, an operational code, a descriptive name, and a geographic boundary are four different facts.
+- Polygon area, measured physical area, and productive area are not interchangeable.
 - A product catalog entry, a stock quantity, a storage location, a purchase, and an application are five different records.
 - A medianero, an employee, a performer, a responsible person, and a recording person are business relationships. The MVP does not turn them into software accounts.
 - Exact origin, partial origin, and unknown origin are different states. A medianero letter is none of them.

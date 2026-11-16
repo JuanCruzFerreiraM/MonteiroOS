@@ -14,7 +14,9 @@ Prefer:
 - The same presentation of dates, times, and units everywhere.
 - Controls that can be used without a pointer and that expose labels to assistive technology.
 
-The center of daily production work is the **vidriera detail** view: identity, active cycle, recent operations, and the actions to record work or open history. A spatial map of the farm is a future navigation aid. Stage 1 does not depend on it.
+The center of daily production work is the **vidriera detail** view: identity, active cycle, recent operations, and the actions to record work or open history.
+
+The geographic map is how the operator locates a quinta and selects a mapped vidriera. Choosing a polygon opens that same detail view. The map does not replace it and does not become a second place to record operations. Vidrieras that have no polygon stay reachable from the list.
 
 ## Current interface
 
@@ -43,7 +45,7 @@ User-facing copy stays in Spanish, matching the current document language and th
 
 The first shell only needs destinations that the implemented features use. A reasonable set, added as features land, is:
 
-- Farms and vidrieras
+- Farms and vidrieras, including the quinta map once PROD-06 is present
 - The open vidriera
 - People
 - Crops and varieties

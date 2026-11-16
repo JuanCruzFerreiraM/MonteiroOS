@@ -26,12 +26,12 @@ Database backup and restore use `pg_dump` and `pg_restore` through the Compose d
 
 Four committed stages:
 
-1. **Production registration and traceability.** Record farms, production sections, cultivation cycles, and operations, then reconstruct that history.
+1. **Production registration and traceability.** Record farms, production sections, approximate map boundaries, cultivation cycles, and operations, then reconstruct that history.
 2. **Harvesting and yield.** Record partial harvests and compare cultivation cycles.
 3. **Inventory and production costs.** Track supplies and calculate production cost without assuming a complete opening inventory.
 4. **Market and commercial management.** Connect harvests to boxes, dispatch, sales, and unit economics.
 
-Interactive maps, sensors, automation control, voice capture, forecasting, and multi-farm SaaS are future options. They are not part of the committed roadmap.
+Locating quintas and vidrieras on a satellite or aerial map is part of Stage 1 ([PROD-06](docs/features/PROD-06-farm-visual-mapping.md)). Sensors, automation control, voice capture, forecasting, richer satellite analysis, and multi-farm SaaS remain future options. They are not part of the committed roadmap.
 
 ## Documentation
 
