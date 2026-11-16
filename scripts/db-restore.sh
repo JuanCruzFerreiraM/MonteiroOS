@@ -11,8 +11,10 @@ fi
 
 BACKUP_FILE=$1
 TARGET=$2
-PRIMARY=${POSTGRES_DB:-monteiro}
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=db-safety.sh
+source "${ROOT}/scripts/db-safety.sh"
+PRIMARY=$(resolve_primary_database "$ROOT")
 
 if [[ "$BACKUP_FILE" != /* ]]; then
   BACKUP_FILE="$(pwd)/${BACKUP_FILE}"

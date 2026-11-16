@@ -22,7 +22,7 @@ Replace `monteiro` if `POSTGRES_DB` is different. The file is a PostgreSQL custo
 
 ## Restore into an empty database
 
-Restoration refuses the primary application database (`POSTGRES_DB`, default `monteiro`) and the maintenance databases `postgres`, `template0`, and `template1`. It also refuses a target that already exists, so it will not merge a dump into a database that already has data.
+Restoration refuses the primary application database and the maintenance databases `postgres`, `template0`, and `template1`. The primary name is the shell's `POSTGRES_DB` when that is set, otherwise `POSTGRES_DB` in the repository `.env`, otherwise `monteiro`. That is the same order Docker Compose uses. Restoration also refuses a target that already exists, so it will not merge a dump into a database that already has data. It never drops a database.
 
 ```bash
 scripts/db-restore.sh backups/monteiro-20261116.dump monteiro_restore_check
@@ -47,13 +47,19 @@ Do not point `pg_restore` at the primary database by hand. A failed restore can 
 
 ## Verify a round trip
 
-`scripts/verify-backup-restore.sh` creates two throwaway databases, writes one probe row, dumps the source, restores it into the other database, and reads the row back. It then checks that the probe table is absent from the primary database and drops both throwaway databases. It does not modify the development database.
+`scripts/verify-backup-restore.sh` checks that a probe row survives `pg_dump` and `pg_restore`. It does not use fixed database names.
+
+Each run allocates two identifiers, `core01_probe_src_...` and `core01_probe_dst_...`. Before creating either one, it asks PostgreSQL whether that name already exists. A name that exists, or that matches the primary or a maintenance database, is left untouched and the script tries another identifier. If it cannot find a free name, it stops. It does not drop an existing database to make room.
+
+The script records a database only after that run has created it. On success, failure, or an interrupt, cleanup drops only the names on that list. A database created by an earlier run, or by someone else, is not on the list and is not dropped.
+
+One limitation remains. `scripts/db-restore.sh` creates the empty target and then runs `pg_restore`. If `pg_restore` fails after that create, the verifier has not yet recorded the target, so it leaves the empty database in place. An interrupted run can do the same. Inspect a leftover `core01_probe_*` database before dropping it, and drop it only when you recognize it as yours. Leaving it is safer than deleting a database the script cannot prove it created.
+
+The probe dump is a unique file under `backups/` and is removed when the script exits. The probe table is not created in the primary database and it is not a migration.
 
 ```bash
 scripts/verify-backup-restore.sh
 ```
-
-The probe table exists only inside those throwaway databases. It is not an application table and it is not a migration.
 
 ## Compatibility
 
