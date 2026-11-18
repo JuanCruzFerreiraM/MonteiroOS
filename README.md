@@ -42,6 +42,25 @@ Lists omit inactive records unless `include_inactive=true`. There is no delete r
 - `/produccion/quintas/{quintaId}/vidrieras/nueva` suggests a code and creates a vidriera.
 - `/produccion/vidrieras/{vidrieraId}` shows the vidriera and canteros `C1` through `C4`.
 - Edit routes under those paths change descriptive data. A cantero edit cannot change its number or its vidriera.
+- `/produccion/quintas/{quintaId}/mapa` opens that quinta on a map. Saved polygons are drawn when they exist. A quinta without a boundary remains valid.
+
+### Satellite imagery
+
+The map uses [Esri World Imagery](https://developers.arcgis.com/rest/basemap-styles/service-data/) through the authenticated ArcGIS Location Platform service:
+
+`https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer`
+
+An API key is required. The unauthenticated `services.arcgisonline.com` World Imagery endpoint is not used. Esri documents that service as requiring an ArcGIS license, and a request to the Location Platform tile URL without a token returns an error body (`Token Required`), even when the HTTP status is 200.
+
+Create a free [ArcGIS Location Platform](https://location.arcgis.com/) account and an API key with **Basemaps** and **Geocoding** privileges. Put it in `ESRI_API_KEY`. The Next.js server sends it as `Authorization: Bearer` when it proxies tiles and place search. The browser only calls `/api/imagery/...` on the same origin. Do not prefix the variable with `NEXT_PUBLIC_`.
+
+Place search uses the ArcGIS Geocoding service `findAddressCandidates` with `forStorage=false`, biased toward the La Plata area, so names such as Villa Elisa and Arturo Seguí can be found. Results are not stored.
+
+Attribution has to stay visible. The map shows `Powered by Esri` plus the `copyrightText` returned by the World Imagery service. If that metadata call fails, the fallback text is the attribution Esri publishes for this service: Esri, Maxar, Earthstar Geographics, and the GIS User Community. Leaflet's own attribution stays as well.
+
+Published Location Platform allowances, from [the pricing page](https://location.arcgis.com/pricing/) and the [Static Basemap Tiles](https://developers.arcgis.com/rest/static-basemap-tiles/) and [Geocoding](https://developers.arcgis.com/rest/geocode/) references checked for this feature: 2,000,000 basemap tiles per month, then $0.15 per 1,000 tiles; 20,000 geocodes that are not stored, then $0.50 per 1,000. Confirm the current figures before relying on them. The service is the current World Imagery map tile service in Esri's developer documentation, not a deprecated API. This repository has not visually confirmed greenhouse-level detail around Villa Elisa or Arturo Seguí, because that requires a key and a look at the imagery.
+
+Polygons are GeoJSON in WGS84. Replacing the imagery provider does not require redrawing them.
 
 ### Access boundary
 

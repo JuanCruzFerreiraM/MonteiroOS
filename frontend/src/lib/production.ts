@@ -38,6 +38,42 @@ export type FormState = {
   error?: string;
 };
 
+export type GeoJsonPolygon = {
+  type: "Polygon";
+  coordinates: number[][][];
+};
+
+export type BoundaryWarning = {
+  code: string;
+  message: string;
+  vidriera_id: string | null;
+  vidriera_code: string | null;
+};
+
+export type Boundary = {
+  id: string;
+  geometry: GeoJsonPolygon | null;
+  warnings: BoundaryWarning[];
+};
+
+export type MapVidriera = {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+  geometry: GeoJsonPolygon | null;
+  warnings: BoundaryWarning[];
+};
+
+export type QuintaMap = {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+  geometry: GeoJsonPolygon | null;
+  vidrieras: MapVidriera[];
+};
+
 export function activeLabel(active: boolean): string {
   return active ? "Activa" : "Inactiva";
 }

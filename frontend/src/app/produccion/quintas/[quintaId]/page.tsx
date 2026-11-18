@@ -6,7 +6,7 @@ import {
   VidrieraList,
 } from "@/components/production/production-views";
 import { readJson } from "@/lib/backend";
-import type { Quinta, Vidriera } from "@/lib/production";
+import type { Boundary, Quinta, Vidriera } from "@/lib/production";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,9 @@ export default async function QuintaDetailPage({
   if (!quinta.ok) {
     return <p role="alert">{quinta.message}</p>;
   }
+  const boundary = await readJson<Boundary>(
+    `/api/production/quintas/${quintaId}/boundary`,
+  );
   const vidrieras = await readJson<Vidriera[]>(
     `/api/production/quintas/${quintaId}/vidrieras?include_inactive=${
       includeInactive ? "true" : "false"
@@ -49,6 +52,9 @@ export default async function QuintaDetailPage({
         ) : (
           <p className="text-sm text-muted">Sin notas.</p>
         )}
+        {boundary.ok && boundary.data.geometry === null ? (
+          <p className="text-sm text-muted">Sin límite geográfico.</p>
+        ) : null}
       </header>
       <div className="flex flex-wrap gap-3">
         <Link
@@ -56,6 +62,14 @@ export default async function QuintaDetailPage({
           className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Editar datos
+        </Link>
+        <Link
+          href={`/produccion/quintas/${quintaId}/mapa`}
+          className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          {boundary.ok && boundary.data.geometry
+            ? "Ver mapa"
+            : "Ubicar en el mapa"}
         </Link>
         {quinta.data.active ? (
           <Link

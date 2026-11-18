@@ -61,6 +61,7 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       BACKEND_URL: http://backend:8000
       APP_ACCESS_SECRET: ${APP_ACCESS_SECRET:-}
+      ESRI_API_KEY: ${ESRI_API_KEY:-}
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     volumes:
