@@ -13,6 +13,7 @@ const FarmMap = dynamic(() => import("./farm-map").then((mod) => mod.FarmMap), {
 export function FarmMapLoader(props: {
   mapData: QuintaMap;
   imagery: ImageryPublicConfig;
+  justCreated?: boolean;
 }) {
   return <FarmMap {...props} />;
 }

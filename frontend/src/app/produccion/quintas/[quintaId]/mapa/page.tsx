@@ -10,10 +10,13 @@ export const dynamic = "force-dynamic";
 
 export default async function QuintaMapPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ quintaId: string }>;
+  searchParams: Promise<{ paso?: string }>;
 }) {
   const { quintaId } = await params;
+  const query = await searchParams;
   const [mapResult, imagery] = await Promise.all([
     readJson<QuintaMap>(
       `/api/production/quintas/${quintaId}/map?include_inactive=true`,
@@ -52,7 +55,11 @@ export default async function QuintaMapPage({
           Volver a la quinta
         </Link>
       </div>
-      <FarmMapLoader mapData={mapResult.data} imagery={imagery} />
+      <FarmMapLoader
+        mapData={mapResult.data}
+        imagery={imagery}
+        justCreated={query.paso === "limite"}
+      />
     </div>
   );
 }
