@@ -7,7 +7,12 @@ export type NavigationItem = {
 
 export const navigation = [
   { id: "inicio", label: "Inicio", href: "/", available: true },
-  { id: "produccion", label: "Producción", available: false },
+  {
+    id: "produccion",
+    label: "Producción",
+    href: "/produccion",
+    available: true,
+  },
   { id: "operaciones", label: "Operaciones", available: false },
   { id: "cosechas", label: "Cosechas", available: false },
   { id: "inventario", label: "Inventario", available: false },

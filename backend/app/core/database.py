@@ -7,7 +7,7 @@ from app.core.config import get_settings
 
 
 class Base(DeclarativeBase):
-    """Declarative base reserved for future domain models."""
+    """Declarative base for domain models."""
 
 
 engine = create_engine(get_settings().sqlalchemy_url, pool_pre_ping=True)

@@ -15,7 +15,7 @@ Record what happens in each vidriera so the business can reconstruct a cultivati
 | Implemented | Integrated and acceptance criteria verified |
 | Deferred | Intentionally postponed |
 
-CORE-01 is **In Progress**. It is not integrated until its pull request is reviewed. Every other feature below is **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on.
+CORE-01 and PROD-01 are **In Progress**. Neither is **Implemented**. The other features below are **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on. PROD-01 adds the first revision, `0001_production_hierarchy`.
 
 ## Priority legend
 
@@ -46,7 +46,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | CORE-01 | Application Foundation | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` `INFRA` | [spec](docs/features/CORE-01-application-foundation.md) |
 | CORE-02 | Units of Measurement | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-02-units-of-measurement.md) |
 | CORE-03 | People & Roles Registry | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-03-people-and-roles.md) |
-| PROD-01 | Farms, Vidrieras & Beds | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
+| PROD-01 | Farms, Vidrieras & Beds | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
 | PROD-06 | Farm Visual Mapping | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-06-farm-visual-mapping.md) |
 | PROD-02 | Flower Type, Variety & Classifications | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-02-crop-variety-catalog.md) |
 | PROD-03 | Cultivation Cycle Management | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-03-cultivation-cycles.md) |
@@ -172,8 +172,9 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 
 | Capability | State |
 | --- | --- |
-| Development foundation: Compose, CI, health check, empty Alembic | Present in the repository. Not a product feature. |
+| Development foundation: Compose, CI, health check | Present in the repository. Not a product feature. |
 | CORE-01 application shell, loopback binding, optional access secret, backup scripts | In Progress on the feature branch. Not integrated. |
-| Stage 1–4 features in the tables above, except CORE-01 | Planned |
+| PROD-01 quintas, vidrieras, and canteros | In Progress on the feature branch. Not integrated. |
+| Stage 1–4 features in the tables above, except CORE-01 and PROD-01 | Planned |
 | PROD-06 farm map | Planned. Stage 1. Specification linked above. |
 | Satellite analysis beyond locating units, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |

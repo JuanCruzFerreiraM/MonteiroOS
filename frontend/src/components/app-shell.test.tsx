@@ -35,8 +35,10 @@ describe("AppShell", () => {
     expect(html).toContain("Inicio");
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("Producción");
+    expect(html).toContain('href="/produccion"');
+    expect(html).toContain("Operaciones");
     expect(html).toContain("Aún no disponible");
-    expect(html).not.toContain('href="/produccion"');
+    expect(html).not.toContain('href="/operaciones"');
     expect(html).not.toContain("quintas registradas");
     expect(html).toContain("min-w-[1280px]");
   });

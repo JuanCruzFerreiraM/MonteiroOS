@@ -123,7 +123,7 @@ cd backend
 uv run pytest
 ```
 
-`GET /health` returns `{"status": "ok"}` only when `SELECT 1` succeeds. If the database is unreachable, the endpoint returns `503`. That route stays public. When `APP_ACCESS_SECRET` is set, every other route requires `X-Monteiro-Access`.
+`GET /health` returns `{"status": "ok"}` only when `SELECT 1` succeeds. If the database is unreachable, the endpoint returns `503`. That route stays public. When `APP_ACCESS_SECRET` is set, every other route requires `X-Monteiro-Access`. The Next.js server may send that header. The secret does not protect an exposed frontend: anyone who can open the web app can use the screens, so a frontend published beyond loopback needs its own deployment protection.
 
 Frontend unit tests:
 
@@ -168,9 +168,9 @@ npm run build
 
 ## Migrations
 
-Alembic lives in `backend/alembic` and uses the application database URL.
+Alembic lives in `backend/alembic` and uses the application database URL. `env.py` imports the production models so `Base.metadata` includes them.
 
-Today there are no revisions:
+The first revision is `0001_production_hierarchy`. Apply it before using the Production screens:
 
 ```bash
 cd backend
@@ -178,9 +178,11 @@ uv run alembic upgrade head
 uv run alembic heads
 ```
 
+Until that upgrade has run, Production routes return `503` and do not present a missing schema as an empty list of quintas. `GET /health` only checks `SELECT 1`.
+
 When a feature adds or changes a model:
 
-1. Import the model module so Alembic sees `Base.metadata`. Today `target_metadata = Base.metadata` and no models are imported.
+1. Import the model module so Alembic sees `Base.metadata`.
 2. `uv run alembic revision --autogenerate -m "describe the change"`.
 3. Read the generated file in `backend/alembic/versions`.
 4. `uv run alembic upgrade head`.
@@ -206,9 +208,11 @@ cp .env.example .env
 uv tool install pre-commit
 pre-commit install
 docker compose up --build
+cd backend
+uv run alembic upgrade head
 ```
 
-Open http://localhost:3000 and http://localhost:8000/health.
+Open http://localhost:3000 and http://localhost:8000/health. Run the upgrade before opening Producción. Health can succeed before the tables exist.
 
 ### Each session
 

@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -5,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import get_settings
 from app.core.database import Base
+from app.modules.production import models as production_models  # noqa: F401
 
 config = context.config
 
@@ -13,10 +15,8 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-config.set_main_option(
-    "sqlalchemy.url",
-    get_settings().sqlalchemy_url.replace("%", "%%"),
-)
+alembic_url = os.environ.get("ALEMBIC_URL") or get_settings().sqlalchemy_url
+config.set_main_option("sqlalchemy.url", alembic_url.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:

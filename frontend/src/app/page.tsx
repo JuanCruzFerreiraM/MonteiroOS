@@ -4,7 +4,7 @@ import { readSystemStatus, type SystemStatus } from "@/lib/system-status";
 export const dynamic = "force-dynamic";
 
 const statusCopy: Record<SystemStatus["state"], string> = {
-  ok: "La base de datos responde. Esta pantalla no muestra registros de producción porque ese módulo todavía no está instalado.",
+  ok: "La base de datos responde.",
   database_unavailable:
     "La base de datos no responde. No se muestra un historial vacío como si hubiera producción registrada.",
   backend_unavailable:
@@ -27,8 +27,8 @@ export default async function Home() {
           que ocurre en el cultivo para poder reconstruirlo después.
         </p>
         <p className="text-base leading-7 text-muted">
-          Los módulos se incorporan de a uno. Hoy solo está lista la base de la
-          aplicación: la navegación, el estado del sistema y la base de datos.
+          Los módulos se incorporan de a uno. Producción ya permite registrar
+          quintas, vidrieras y canteros.
         </p>
       </section>
 
