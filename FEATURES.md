@@ -15,7 +15,7 @@ Record what happens in each vidriera so the business can reconstruct a cultivati
 | Implemented | Integrated and acceptance criteria verified |
 | Deferred | Intentionally postponed |
 
-CORE-01 and PROD-01 are **In Progress**. Neither is **Implemented**. The other features below are **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on. PROD-01 adds the first revision, `0001_production_hierarchy`.
+CORE-01, PROD-01, and PROD-06 are **In Progress**. None is **Implemented**. The other features below are **Planned**. The health check, PostgreSQL connection, and Alembic setup remain the bootstrap infrastructure that CORE-01 builds on. PROD-01 adds the first revision, `0001_production_hierarchy`. PROD-06 adds `0002_production_boundaries`.
 
 ## Priority legend
 
@@ -47,7 +47,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | CORE-02 | Units of Measurement | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-02-units-of-measurement.md) |
 | CORE-03 | People & Roles Registry | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/CORE-03-people-and-roles.md) |
 | PROD-01 | Farms, Vidrieras & Beds | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
-| PROD-06 | Farm Visual Mapping | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-06-farm-visual-mapping.md) |
+| PROD-06 | Farm Visual Mapping | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-06-farm-visual-mapping.md) |
 | PROD-02 | Flower Type, Variety & Classifications | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-02-crop-variety-catalog.md) |
 | PROD-03 | Cultivation Cycle Management | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-03-cultivation-cycles.md) |
 | PROD-04 | Crop Allocation Within a Cycle | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-04-crop-allocation.md) |
@@ -156,7 +156,7 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 | Feature | Safe to build | Wait for |
 | --- | --- | --- |
 | PROD-01 | Four canteros per vidriera, with stable codes | Resolved by OQ-21 |
-| PROD-06 | Approximate boundaries; warn on overlap until OQ-30 is decided | OQ-29 before the imagery client |
+| PROD-06 | Approximate boundaries. Overlap and minor overflow warn; a disconnected polygon is rejected | Imagery key and a visual check of the La Plata tiles |
 | PROD-04 | Several varieties per cantero, without a measured share | OQ-02 before area, length, or plant-count portions |
 | PROD-05 | One medianero, or direct management | OQ-12 before extra required fields |
 | OPS-02 | Manual structured records | OQ-07 and OQ-08 before device or schedule truth |
@@ -175,6 +175,6 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 | Development foundation: Compose, CI, health check | Present in the repository. Not a product feature. |
 | CORE-01 application shell, loopback binding, optional access secret, backup scripts | In Progress on the feature branch. Not integrated. |
 | PROD-01 quintas, vidrieras, and canteros | In Progress on the feature branch. Not integrated. |
-| Stage 1–4 features in the tables above, except CORE-01 and PROD-01 | Planned |
-| PROD-06 farm map | Planned. Stage 1. Specification linked above. |
+| Stage 1–4 features in the tables above, except CORE-01, PROD-01, and PROD-06 | Planned |
+| PROD-06 farm map | In Progress. Stage 1. Not accepted until the imagery is inspected with a key. |
 | Satellite analysis beyond locating units, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |

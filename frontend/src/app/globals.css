@@ -18,3 +18,13 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+.leaflet-tooltip.vidriera-code-label {
+  border: 1px solid #1f6b45;
+  color: #1a211c;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 1px 5px;
+  box-shadow: none;
+}

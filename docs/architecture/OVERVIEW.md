@@ -13,9 +13,9 @@ browser → Next.js shell → server-side API calls
 
 | Piece | What exists |
 | --- | --- |
-| Frontend | Next.js 16 desktop shell. Inicio and Producción are working destinations. Other sections are visible and marked unavailable. Producción registers quintas, vidrieras, and canteros. The home page reports API and database health. Tailwind CSS 4 supplies a small set of interface colors. There is no logo. |
+| Frontend | Next.js 16 desktop shell. Inicio and Producción are working destinations. Other sections are visible and marked unavailable. Producción registers quintas, vidrieras, and canteros, and opens a Leaflet map for one quinta. The home page reports API and database health. Tailwind CSS 4 supplies a small set of interface colors. There is no logo. |
 | Backend | One FastAPI process. `GET /health` stays public and only checks `SELECT 1`. Production routes live under `/api/production` and return `503` when revision `0001_production_hierarchy` has not been applied. When `APP_ACCESS_SECRET` is set, every route except health requires `X-Monteiro-Access` before it runs. |
-| Persistence | PostgreSQL 18. The Compose volume is mounted at `/var/lib/postgresql`, which is the path that image requires. SQLAlchemy 2 opens a connection with `pool_pre_ping` and provides a session factory. Alembic revision `0001_production_hierarchy` creates `quintas`, `vidrieras`, and `canteros`. There is no PostGIS and no geometry column. Backup and restore are in [BACKUP.md](../development/BACKUP.md). |
+| Persistence | PostgreSQL 18. The Compose volume is mounted at `/var/lib/postgresql`, which is the path that image requires. SQLAlchemy 2 opens a connection with `pool_pre_ping` and provides a session factory. Alembic revision `0001_production_hierarchy` creates `quintas`, `vidrieras`, and `canteros`. Revision `0002_production_boundaries` adds a nullable JSONB `boundary` on quintas and vidrieras. There is no PostGIS and no separate geometry table. Backup and restore are in [BACKUP.md](../development/BACKUP.md). |
 | Configuration | Environment variables with local defaults. See `.env.example`. `DATABASE_URL`, when set, replaces the `POSTGRES_*` pieces. |
 | Delivery | Docker Compose for the web app, API, and database. Published ports bind to `127.0.0.1`. GitHub Actions jobs named `backend` and `frontend`. |
 | Tests | Pytest hits a real PostgreSQL, including an isolated database for the production schema. Health returns ok when `SELECT 1` works and 503 when it does not. Access tests cover the optional secret. Frontend unit tests cover navigation, the shell, and the production screens. |
@@ -33,7 +33,7 @@ backend/
 │   └── modules/
 │       └── production/   quintas, vidrieras, canteros
 ├── alembic/
-│   └── versions/         0001_production_hierarchy
+│   └── versions/         0001_production_hierarchy, 0002_production_boundaries
 └── tests/
 ```
 
@@ -95,7 +95,7 @@ Features that introduce durable state add SQLAlchemy models on the existing `Bas
 
 The conceptual model is not a command to create one table per noun. A specification's data requirements are the business facts to persist. Physical table design happens during implementation, inside those requirements.
 
-PROD-06 persists approximate GeoJSON boundaries in that same PostgreSQL database. The first mapping release does not add PostGIS and does not store satellite tiles. Imagery is requested from an external provider when the map is open. The provider is selected before that feature is coded, not by this overview.
+PROD-06 persists approximate GeoJSON boundaries in nullable JSONB columns on the existing quinta and vidriera rows. The first mapping release does not add PostGIS and does not store satellite tiles. Imagery is requested from Esri World Imagery through a Next.js proxy when the map is open. The provider can be replaced without redrawing the stored polygons. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the licensing notes.
 
 ## File storage
 

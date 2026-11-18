@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { BoundaryWarning, QuintaMap } from "@/lib/production";
 
 export type MapDraft =
@@ -23,6 +25,8 @@ export function MapEditorPanel({
   error,
   notices,
   confirmingRemoval,
+  selectedId,
+  onSelectVidriera,
   onDrawQuinta,
   onEditQuinta,
   onRedrawQuinta,
@@ -46,6 +50,8 @@ export function MapEditorPanel({
   error: string | null;
   notices: BoundaryWarning[];
   confirmingRemoval: string | null;
+  selectedId: string | null;
+  onSelectVidriera: (vidrieraId: string) => void;
   onDrawQuinta: () => void;
   onEditQuinta: () => void;
   onRedrawQuinta: () => void;
@@ -158,14 +164,36 @@ export function MapEditorPanel({
         ) : (
           <ul className="space-y-3">
             {mapData.vidrieras.map((vidriera) => (
-              <li key={vidriera.id} className="space-y-1">
+              <li
+                key={vidriera.id}
+                className={
+                  vidriera.id === selectedId
+                    ? "space-y-1 rounded-md border border-accent p-2"
+                    : "space-y-1"
+                }
+              >
                 <p className="text-sm">
-                  <span className="font-medium">{vidriera.code}</span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectVidriera(vidriera.id)}
+                    className="font-medium underline-offset-2 hover:underline"
+                  >
+                    {vidriera.code}
+                  </button>
                   <span className="text-muted"> · {vidriera.name}</span>
                   <span className="text-muted">
                     {vidriera.geometry ? " · Mapeada" : " · Sin límite"}
                   </span>
                 </p>
+                {vidriera.id === selectedId ? (
+                  <p className="text-sm">Seleccionada en el mapa.</p>
+                ) : null}
+                <Link
+                  href={`/produccion/vidrieras/${vidriera.id}`}
+                  className="inline-block text-sm font-medium text-accent-strong underline-offset-2 hover:underline"
+                >
+                  Abrir ficha
+                </Link>
                 {vidriera.warnings.map((warning) => (
                   <p
                     key={`${warning.code}-${warning.vidriera_id ?? ""}`}

@@ -39,6 +39,8 @@ const callbacks = {
   onBeginDraw: () => undefined,
   onSave: () => undefined,
   onCancel: () => undefined,
+  selectedId: null,
+  onSelectVidriera: () => undefined,
 };
 
 describe("map editor panel", () => {
@@ -61,6 +63,8 @@ describe("map editor panel", () => {
     expect(html).toContain("Dibuje primero el límite de la quinta");
     expect(html).toContain("VE-V001");
     expect(html).toContain("Sin límite");
+    expect(html).toContain('href="/produccion/vidrieras/v1"');
+    expect(html).toContain("Abrir ficha");
     expect(html).toContain("disabled");
   });
 
@@ -119,8 +123,11 @@ describe("map editor panel", () => {
           },
         ],
         confirmingRemoval: "quinta",
+        selectedId: "v1",
       }),
     );
+
+    expect(html).toContain("Seleccionada en el mapa");
 
     expect(html).toContain("La quinta sigue existiendo");
     expect(html).toContain('role="alert"');

@@ -68,7 +68,9 @@ export function FarmMap({
   const draftLayerRef = useRef<Drawable | null>(null);
   const activeLayerRef = useRef<Drawable | null>(null);
   const draftRef = useRef<MapDraft | null>(null);
+  const fittedData = useRef<QuintaMap | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tileError, setTileError] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
   const [geometryError, setGeometryError] = useState(false);
@@ -92,7 +94,11 @@ export function FarmMap({
     setDraftState(next);
   }
 
-  function renderSaved(data: QuintaMap) {
+  function renderSaved(
+    data: QuintaMap,
+    activeId: string | null,
+    fitView: boolean,
+  ) {
     const leaflet = leafletRef.current;
     const map = mapRef.current;
     const group = savedGroupRef.current;
@@ -120,23 +126,36 @@ export function FarmMap({
       },
     );
     for (const vidriera of data.vidrieras) {
+      const selected = vidriera.id === activeId;
       const placed = placePolygon(
         leaflet,
         group,
         vidriera.geometry,
         {
           color: vidriera.active ? "#174f33" : "#4d5a53",
-          weight: 2,
+          weight: selected ? 4 : 2,
           fillColor: vidriera.active ? "#1f6b45" : "#4d5a53",
-          fillOpacity: 0.28,
+          fillOpacity: selected ? 0.45 : 0.28,
         },
         (layer) => {
           vidrieraLayersRef.current.set(vidriera.id, layer);
+          layer.bindTooltip(vidriera.code, {
+            permanent: true,
+            direction: "center",
+            className: "vidriera-code-label",
+            opacity: 1,
+          });
+          layer.on("click", () => {
+            setSelectedId(vidriera.id);
+          });
         },
       );
       broken = broken || !placed;
     }
     setGeometryError(broken);
+    if (!fitView) {
+      return;
+    }
     if (group.getLayers().length > 0) {
       map.fitBounds(group.getBounds(), { padding: [28, 28] });
     } else {
@@ -239,8 +258,9 @@ export function FarmMap({
     if (!mapReady || draftRef.current) {
       return;
     }
-    renderSaved(mapData);
-  }, [mapReady, mapData]);
+    renderSaved(mapData, selectedId, fittedData.current !== mapData);
+    fittedData.current = mapData;
+  }, [mapReady, mapData, selectedId]);
 
   function beginDraw(next: MapDraft) {
     const map = mapRef.current;
@@ -266,7 +286,7 @@ export function FarmMap({
     draftLayerRef.current = null;
     activeLayerRef.current = null;
     setDraft(null);
-    renderSaved(mapData);
+    renderSaved(mapData, selectedId, false);
   }
 
   async function saveDraft() {
@@ -413,6 +433,8 @@ export function FarmMap({
         error={error}
         notices={notices}
         confirmingRemoval={confirmingRemoval}
+        selectedId={selectedId}
+        onSelectVidriera={setSelectedId}
         onDrawQuinta={() =>
           beginDraw({ kind: "quinta", mode: "attach", phase: "drawing" })
         }
