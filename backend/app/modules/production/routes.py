@@ -1,16 +1,19 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
-from app.modules.production import services
+from app.modules.production import boundaries, services
 from app.modules.production.schemas import (
+    BoundaryRead,
+    BoundaryWrite,
     CanteroRead,
     CanteroUpdate,
     NextVidrieraCode,
     QuintaCreate,
+    QuintaMapRead,
     QuintaRead,
     QuintaUpdate,
     VidrieraCreate,
@@ -97,6 +100,100 @@ def update_vidriera(
     session: DbSession,
 ) -> VidrieraDetail:
     return services.update_vidriera(session, vidriera_id, payload)
+
+
+@router.get(
+    "/quintas/{quinta_id}/boundary",
+    response_model=BoundaryRead,
+    summary="Read a quinta boundary",
+    responses={
+        404: {"description": "The quinta does not exist."},
+    },
+)
+def read_quinta_boundary(quinta_id: uuid.UUID, session: DbSession) -> BoundaryRead:
+    """Return the saved polygon. An existing quinta without one has geometry null."""
+    return boundaries.read_quinta_boundary(session, quinta_id)
+
+
+@router.put(
+    "/quintas/{quinta_id}/boundary",
+    response_model=BoundaryRead,
+    summary="Save a quinta boundary",
+)
+def write_quinta_boundary(
+    quinta_id: uuid.UUID,
+    payload: BoundaryWrite,
+    session: DbSession,
+) -> BoundaryRead:
+    return boundaries.write_quinta_boundary(session, quinta_id, payload)
+
+
+@router.delete(
+    "/quintas/{quinta_id}/boundary",
+    status_code=204,
+    summary="Remove a quinta boundary",
+    responses={404: {"description": "The quinta does not exist."}},
+)
+def delete_quinta_boundary(quinta_id: uuid.UUID, session: DbSession) -> Response:
+    """Clear the geometry and keep the quinta. Missing geometry is still 204."""
+    boundaries.clear_quinta_boundary(session, quinta_id)
+    return Response(status_code=204)
+
+
+@router.get(
+    "/quintas/{quinta_id}/map",
+    response_model=QuintaMapRead,
+    summary="Read a quinta map",
+)
+def read_quinta_map(
+    quinta_id: uuid.UUID,
+    session: DbSession,
+    include_inactive: Annotated[bool, Query()] = False,
+) -> QuintaMapRead:
+    return boundaries.read_quinta_map(
+        session,
+        quinta_id,
+        include_inactive=include_inactive,
+    )
+
+
+@router.get(
+    "/vidrieras/{vidriera_id}/boundary",
+    response_model=BoundaryRead,
+    summary="Read a vidriera boundary",
+    responses={404: {"description": "The vidriera does not exist."}},
+)
+def read_vidriera_boundary(
+    vidriera_id: uuid.UUID,
+    session: DbSession,
+) -> BoundaryRead:
+    """Return the saved polygon. An existing vidriera without one has geometry null."""
+    return boundaries.read_vidriera_boundary(session, vidriera_id)
+
+
+@router.put(
+    "/vidrieras/{vidriera_id}/boundary",
+    response_model=BoundaryRead,
+    summary="Save a vidriera boundary",
+)
+def write_vidriera_boundary(
+    vidriera_id: uuid.UUID,
+    payload: BoundaryWrite,
+    session: DbSession,
+) -> BoundaryRead:
+    return boundaries.write_vidriera_boundary(session, vidriera_id, payload)
+
+
+@router.delete(
+    "/vidrieras/{vidriera_id}/boundary",
+    status_code=204,
+    summary="Remove a vidriera boundary",
+    responses={404: {"description": "The vidriera does not exist."}},
+)
+def delete_vidriera_boundary(vidriera_id: uuid.UUID, session: DbSession) -> Response:
+    """Clear the geometry and keep the vidriera. Missing geometry is still 204."""
+    boundaries.clear_vidriera_boundary(session, vidriera_id)
+    return Response(status_code=204)
 
 
 @router.patch("/canteros/{cantero_id}", response_model=CanteroRead)

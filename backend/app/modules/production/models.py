@@ -10,6 +10,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -32,6 +33,7 @@ class Quinta(Base):
     name_key: Mapped[str] = mapped_column(String(200), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    boundary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     vidrieras: Mapped[list["Vidriera"]] = relationship(back_populates="quinta")
 
@@ -64,6 +66,7 @@ class Vidriera(Base):
     name_key: Mapped[str] = mapped_column(String(200), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    boundary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     quinta: Mapped[Quinta] = relationship(back_populates="vidrieras")
     canteros: Mapped[list["Cantero"]] = relationship(back_populates="vidriera")
