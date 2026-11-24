@@ -1,13 +1,19 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime, time
 
 from sqlalchemy import (
+    ARRAY,
+    Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
+    SmallInteger,
     Text,
+    Time,
+    UniqueConstraint,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -91,3 +97,75 @@ class Operation(Base):
         nullable=True,
     )
     timing_basis: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class RecurringOperationSchedule(Base):
+    """One immutable revision of a lighting or black-nylon schedule.
+
+    Revisions that share ``series_id`` are the same schedule over time. A new
+    revision starts on its effective date; the previous revision keeps the
+    times that already applied. Overlapping periods of the same vidriera and
+    type are rejected in the database. ``generates`` is false for a pause, so
+    those days are not expected work.
+    """
+
+    __tablename__ = "recurring_operation_schedules"
+    __table_args__ = (
+        CheckConstraint(
+            "operation_type IN ('artificial_lighting', 'black_nylon')",
+            name="ck_schedules_type",
+        ),
+        CheckConstraint(
+            "effective_end >= effective_start",
+            name="ck_schedules_period",
+        ),
+        CheckConstraint("start_time <> end_time", name="ck_schedules_times"),
+        CheckConstraint(
+            "status IN ('active', 'paused', 'ended')",
+            name="ck_schedules_status",
+        ),
+        CheckConstraint(
+            "cardinality(weekdays) > 0 "
+            "AND weekdays <@ ARRAY[1, 2, 3, 4, 5, 6, 7]::smallint[]",
+            name="ck_schedules_weekdays",
+        ),
+        UniqueConstraint(
+            "series_id",
+            "effective_start",
+            name="uq_schedules_series_start",
+        ),
+        Index(
+            "ix_schedules_vidriera_type",
+            "vidriera_id",
+            "operation_type",
+            "effective_start",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    series_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    vidriera_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("vidrieras.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    operation_type: Mapped[str] = mapped_column(Text, nullable=False)
+    effective_start: Mapped[date] = mapped_column(Date, nullable=False)
+    effective_end: Mapped[date] = mapped_column(Date, nullable=False)
+    weekdays: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger),
+        nullable=False,
+    )
+    start_time: Mapped[time] = mapped_column(Time, nullable=False)
+    end_time: Mapped[time] = mapped_column(Time, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    generates: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )

@@ -1,11 +1,20 @@
 import uuid
-from typing import Annotated
+from datetime import date
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
-from app.modules.operations import records
+from app.modules.operations import records, schedules
+from app.modules.operations.schedule_schemas import (
+    OccurrenceRead,
+    ScheduleCreate,
+    ScheduleEffectiveFrom,
+    ScheduleEnd,
+    ScheduleRevise,
+    ScheduleSeriesRead,
+)
 from app.modules.operations.schemas import (
     OperationCreate,
     OperationRead,
@@ -54,3 +63,96 @@ def update_operation(
     session: DbSession,
 ) -> OperationRead:
     return records.update_operation(session, operation_id, payload)
+
+
+@router.get(
+    "/vidrieras/{vidriera_id}/schedules",
+    response_model=list[ScheduleSeriesRead],
+)
+def list_schedules(
+    vidriera_id: uuid.UUID,
+    session: DbSession,
+) -> list[ScheduleSeriesRead]:
+    return schedules.list_schedules(session, vidriera_id)
+
+
+@router.post(
+    "/vidrieras/{vidriera_id}/schedules",
+    response_model=ScheduleSeriesRead,
+    status_code=201,
+)
+def create_schedule(
+    vidriera_id: uuid.UUID,
+    payload: ScheduleCreate,
+    session: DbSession,
+) -> ScheduleSeriesRead:
+    return schedules.create_schedule(session, vidriera_id, payload)
+
+
+@router.get("/schedules/{series_id}", response_model=ScheduleSeriesRead)
+def get_schedule(series_id: uuid.UUID, session: DbSession) -> ScheduleSeriesRead:
+    return schedules.get_schedule(session, series_id)
+
+
+@router.post(
+    "/schedules/{series_id}/revisions",
+    response_model=ScheduleSeriesRead,
+)
+def revise_schedule(
+    series_id: uuid.UUID,
+    payload: ScheduleRevise,
+    session: DbSession,
+) -> ScheduleSeriesRead:
+    return schedules.revise_schedule(session, series_id, payload)
+
+
+@router.post("/schedules/{series_id}/pause", response_model=ScheduleSeriesRead)
+def pause_schedule(
+    series_id: uuid.UUID,
+    payload: ScheduleEffectiveFrom,
+    session: DbSession,
+) -> ScheduleSeriesRead:
+    return schedules.pause_schedule(session, series_id, payload)
+
+
+@router.post("/schedules/{series_id}/resume", response_model=ScheduleSeriesRead)
+def resume_schedule(
+    series_id: uuid.UUID,
+    payload: ScheduleEffectiveFrom,
+    session: DbSession,
+) -> ScheduleSeriesRead:
+    return schedules.resume_schedule(session, series_id, payload)
+
+
+@router.post("/schedules/{series_id}/end", response_model=ScheduleSeriesRead)
+def end_schedule(
+    series_id: uuid.UUID,
+    payload: ScheduleEnd,
+    session: DbSession,
+) -> ScheduleSeriesRead:
+    return schedules.end_schedule(session, series_id, payload)
+
+
+@router.get(
+    "/vidrieras/{vidriera_id}/occurrences",
+    response_model=list[OccurrenceRead],
+)
+def list_occurrences(
+    vidriera_id: uuid.UUID,
+    session: DbSession,
+    start: Annotated[date, Query(alias="from")],
+    end: Annotated[date, Query(alias="to")],
+    operation_type: Annotated[str | None, Query()] = None,
+    status: Annotated[
+        Literal["scheduled", "unverified", "confirmed", "not_occurred"] | None,
+        Query(),
+    ] = None,
+) -> list[OccurrenceRead]:
+    return schedules.list_occurrences(
+        session,
+        vidriera_id,
+        start,
+        end,
+        operation_type=operation_type,
+        status=status,
+    )
