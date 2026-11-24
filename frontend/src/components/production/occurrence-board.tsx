@@ -2,12 +2,15 @@
 
 import { useActionState, useState } from "react";
 
-import { resolveOccurrences } from "@/app/produccion/confirmation-actions";
+import {
+  resolveOccurrences,
+  type ConfirmationState,
+} from "@/app/produccion/confirmation-actions";
 import { FormError } from "@/components/production/production-views";
 import { toLocalInput } from "@/lib/operations";
 import { occurrenceStatusLabel, type Occurrence } from "@/lib/schedules";
 
-const initialState = {};
+const initialState: ConfirmationState = {};
 
 const fieldClass =
   "w-full rounded-md border border-line bg-surface px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";

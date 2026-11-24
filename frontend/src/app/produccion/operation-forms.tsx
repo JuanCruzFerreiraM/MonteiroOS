@@ -71,7 +71,7 @@ export function OperationEditForm({
   cycles: CycleChoice[];
 }) {
   const [state, action] = useActionState(updateOperation, initialState);
-  const [type, setType] = useState(operation.operation_type);
+  const [type, setType] = useState<string>(operation.operation_type);
   return (
     <form action={action} className="max-w-xl space-y-4">
       <FormError message={state.error} />
