@@ -27,6 +27,8 @@ When OPS-03 is implemented, a shared operation appears once in each targeted vid
 
 The history is read-only. Corrections happen by editing the operation.
 
+Expected and unverified occurrences from OPS-AUTO-01 are not completed work. A confirmed scheduled occurrence is an operation. An explicit non-occurrence stays a resolution and is not shown as work that happened.
+
 ## Expected Behavior
 
 - Recording an operation and opening the vidriera shows it without a second entry step.

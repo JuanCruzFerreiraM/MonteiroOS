@@ -19,6 +19,7 @@ Terms are defined in the [glossary](../product/GLOSSARY.md).
 | Medianero assignment or direct-management interval | Production | PROD-05 |
 | Product, product category | Product catalog | INV-01 |
 | Operation, operation type, scope | Operations | OPS-01, OPS-03 |
+| Recurring schedule revision, occurrence resolution | Operations | OPS-AUTO-01 |
 | Type-specific operation details | Operations | OPS-02 |
 | Operation participant | Operations | OPS-04 |
 | Observation text | Operations | OPS-02 |
@@ -115,6 +116,9 @@ A box content with no harvest lot is an explicit unknown origin, not a missing r
 | Cycle date ranges for the same vidriera do not overlap. | Two active periods would make history ambiguous. |
 | A cycle's allocation refers only to canteros of that cycle's vidriera. | Prevents cross-section allocations. |
 | An operation scope's cycle, when set, belongs to that scope's vidriera. | Prevents attaching work to another section's cycle. |
+| In OPS-01 the optional cycle is stored on the single-vidriera operation. It must belong to that vidriera. | The operation has one vidriera, so a separate scope row is not required yet. OPS-03 may move the link. |
+| Schedule periods of the same vidriera and lighting or nylon type do not overlap. | Two programs must not claim the same day. A new revision does not overwrite the previous one. |
+| One resolution exists per schedule series and occurrence date. | Repeating a confirmation does not create a second outcome. |
 | At most one open responsibility interval per vidriera. | Either one medianero or direct management by Monteiro. Intervals do not overlap. |
 | A unit belongs to one dimension. Conversion stays inside that dimension. | Confirmed measurement rule. |
 | Product commercial name plus manufacturer is the duplicate check shown to the user. Exact uniqueness is case-insensitive on the commercial name when the manufacturer is empty. | Stops obvious duplicates without blocking two products that share a trade name and have different manufacturers. |
@@ -133,6 +137,8 @@ Deleting a record that other history points at is rejected. The user deactivates
 - Cycle dates are calendar dates. Periods of one vidriera are inclusive and must not overlap, including a shared boundary day. PostgreSQL enforces that with a `btree_gist` exclusion constraint, because the comparison needs uuid equality together with a date range. An open cycle runs through every later date.
 - A cycle's dates and notes may be corrected in place. The correction keeps the identifier and the vidriera, keeps an active cycle active, keeps a finalized cycle finalized, and is rejected when it would overlap another cycle. PROD-03 does not retain the previous values. An audit trail for those corrections is deferred.
 - Operations, harvests, movements, purchases, dispatches, sales, and receipts store the business time of the event and the time the record was written.
+- A recurring schedule is a series of revisions. Each revision keeps the clock times that apply between its effective dates. A later edit starts a new revision; it does not change the expected times of a day already covered. A paused revision does not generate occurrences. Clock times are civil times interpreted in America/Argentina/Buenos_Aires. Stored instants are timezone-aware and do not repeat that timezone on every row.
+- A resolution copies the expected start and end when a person confirms the occurrence or records that it did not happen. Correcting the actual interval does not change those expected timestamps. An unverified occurrence is calculated; it is not a completed operation. The future check uses a five-minute tolerance in the application, because a database check against the current time would fail a stored row on the next day.
 - Closing or correcting any other record does not rewrite an earlier assignment or operation in place without leaving the previous values observable. Implementation can use an update with timestamps or an explicit correction. Silent replacement is not acceptable.
 
 ## Cross-module references

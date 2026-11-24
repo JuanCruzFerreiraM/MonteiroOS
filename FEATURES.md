@@ -53,7 +53,8 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | PROD-04 | Crop Allocation Within a Cycle | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-04-crop-allocation.md) |
 | PROD-05 | Medianero Assignment History | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-05-medianero-assignment-history.md) |
 | INV-01 | Product Catalog | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/INV-01-product-catalog.md) |
-| OPS-01 | Operation Registration | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-01-operation-registration.md) |
+| OPS-01 | Operation Registration | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-01-operation-registration.md) |
+| OPS-AUTO-01 | Recurring Operation Scheduling | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-AUTO-01-recurring-operation-scheduling.md) |
 | OPS-02 | Operation Types & Structured Data | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-02-operation-types.md) |
 | OPS-03 | Multi-Vidriera Operations | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-03-multi-vidriera-operations.md) |
 | OPS-04 | Operation Participants & Responsibilities | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-04-operation-participants.md) |
@@ -96,6 +97,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 CORE-01
   ├── PROD-01 ── PROD-06
   │         └── PROD-03 ── OPS-01 ── TRACE-01
+  │                 │          ├── OPS-AUTO-01
   │                 │          ├── OPS-02 ── COST-01 ── COST-02 ── COST-03
   │                 │          ├── OPS-03
   │                 │          └── OPS-04
@@ -113,7 +115,7 @@ CORE-01 ── COMM-02 ── COMM-04 ── COST-03
 
 COMM-04 depends on both COMM-01 and COMM-02. COMM-03 can load a box without an order.
 
-OPS-01 can store a typed operation with notes before CORE-02 and INV-01 exist. Structured quantities wait for those catalogs. Harvest comparison waits for measurements. Cost and commerce attach to records that already exist; they do not replace them.
+OPS-01 can store a typed operation with notes before CORE-02 and INV-01 exist. OPS-AUTO-01 depends on OPS-01 and PROD-03: it stores expected lighting and nylon intervals for a vidriera, and a confirmed occurrence becomes an OPS-01 operation. Structured quantities wait for those catalogs. Harvest comparison waits for measurements. Cost and commerce attach to records that already exist; they do not replace them.
 
 ## Recommended implementation sequence
 

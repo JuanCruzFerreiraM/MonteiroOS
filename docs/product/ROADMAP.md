@@ -27,6 +27,7 @@ That slice is CORE-01, PROD-01, PROD-06, PROD-03, OPS-01, and TRACE-01. The rest
 | [PROD-05](../features/PROD-05-medianero-assignment-history.md) | Medianero Assignment History |
 | [INV-01](../features/INV-01-product-catalog.md) | Product Catalog |
 | [OPS-01](../features/OPS-01-operation-registration.md) | Operation Registration |
+| [OPS-AUTO-01](../features/OPS-AUTO-01-recurring-operation-scheduling.md) | Recurring Operation Scheduling |
 | [OPS-02](../features/OPS-02-operation-types.md) | Operation Types & Structured Data |
 | [OPS-03](../features/OPS-03-multi-vidriera-operations.md) | Multi-Vidriera Operations |
 | [OPS-04](../features/OPS-04-operation-participants.md) | Operation Participants & Responsibilities |

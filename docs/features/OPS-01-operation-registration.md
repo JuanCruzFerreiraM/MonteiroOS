@@ -4,7 +4,7 @@
 - ID: OPS-01
 - Module: Operations
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE`
 - Dependencies: PROD-01, PROD-03
@@ -39,7 +39,8 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 
 - Scope at this stage is a single vidriera. See [ADR 0004](../decisions/0004-operation-scope-separate-from-yield.md).
 - OPS-01 records an operation that already happened. It does not record a plan.
-- A schedule is not created here and is not evidence that work happened. Scheduling, if it is needed later, is a separate capability.
+- A recurring schedule is [OPS-AUTO-01](OPS-AUTO-01-recurring-operation-scheduling.md). It is not evidence that work happened, and saving a manual lighting or nylon operation does not convert it into a scheduled occurrence.
+- The optional cycle is stored on the operation while the operation belongs to one vidriera. OPS-03 may move that link onto a scope row. The selected cycle must belong to the same vidriera.
 - The recorder, when named, is a person from the registry and may differ from a performer. Performers are OPS-04, so this feature does not require one. There is no software account on the operation.
 
 ## Data Requirements
@@ -47,17 +48,19 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 | Fact | Required |
 | --- | --- |
 | Operation type, from the initial catalog | Yes |
-| Time the operation occurred | Yes. Not in the future, aside from ordinary clock tolerance |
-| Vidriera | Yes |
+| Time the operation occurred | Yes. Not in the future, aside from a five-minute clock tolerance |
+| Vidriera | Yes. It cannot be changed after creation |
 | Cultivation cycle of that vidriera | No |
 | Notes | No |
+| Actual start and end, for lighting and black nylon | No. Both ends, or neither. The end is after the start and is not in the future beyond the same tolerance |
+| Origin | Yes. `manual` for this feature |
 | Recording person | No |
 | Recorded-at timestamp | Yes |
 
 ## User Interactions
 
-- On the vidriera detail, choose a type, confirm the time and the cycle default, add optional notes, and save.
-- Correct notes or the cycle link on an existing operation.
+- On the vidriera detail, choose a type, confirm the time and the cycle default, add optional notes, and save. Lighting and nylon may also include an actual interval.
+- Correct the type, the occurrence time, the cycle, and the notes. Clearing the cycle is explicit. The vidriera stays the same, the identifier stays the same, and the record is not deleted.
 
 ## Acceptance Criteria
 
@@ -77,7 +80,8 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 
 - A missing type or time is rejected.
 - An occurrence time later than the current time, beyond ordinary clock tolerance, is rejected. There is no 24-hour grace period.
-- Editing notes does not create a second operation.
+- Editing type, time, cycle, notes, or a lighting/nylon interval does not create a second operation.
+- An interval with only one end is rejected. Duration is not inferred when the end is missing.
 
 ## Out of Scope
 
@@ -85,7 +89,7 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 - Several vidrieras (OPS-03).
 - Participants (OPS-04).
 - Photographs (TRACE-02).
-- Scheduling or planning future operations. A configured schedule remains a different fact, as described in [OPERATIONS_MODEL.md](../domain/OPERATIONS_MODEL.md).
+- Recurring schedules and their confirmation. That is [OPS-AUTO-01](OPS-AUTO-01-recurring-operation-scheduling.md). A manual operation remains available beside a schedule.
 - The history browser beyond showing the new operation on the vidriera (TRACE-01).
 
 ## Dependencies & Integration Points
