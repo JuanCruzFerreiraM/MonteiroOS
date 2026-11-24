@@ -1,14 +1,18 @@
 import uuid
+from datetime import date
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
     Uuid,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -70,6 +74,7 @@ class Vidriera(Base):
 
     quinta: Mapped[Quinta] = relationship(back_populates="vidrieras")
     canteros: Mapped[list["Cantero"]] = relationship(back_populates="vidriera")
+    cycles: Mapped[list["CultivationCycle"]] = relationship(back_populates="vidriera")
 
 
 class Cantero(Base):
@@ -92,3 +97,50 @@ class Cantero(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     vidriera: Mapped[Vidriera] = relationship(back_populates="canteros")
+
+
+class CultivationCycle(Base):
+    """One productive period of a vidriera, from planting until explicit close.
+
+    Status is derived from ``end_date`` and is not stored. NULL means the cycle
+    is active; a date means it is finalized. That keeps the two facts from
+    disagreeing. The non-overlap exclusion constraint is created in the
+    migration because it depends on the ``btree_gist`` extension.
+    """
+
+    __tablename__ = "cultivation_cycles"
+    __table_args__ = (
+        CheckConstraint(
+            "end_date IS NULL OR end_date >= start_date",
+            name="ck_cultivation_cycles_end_not_before_start",
+        ),
+        Index(
+            "uq_cultivation_cycles_one_active",
+            "vidriera_id",
+            unique=True,
+            postgresql_where=text("end_date IS NULL"),
+        ),
+        Index(
+            "ix_cultivation_cycles_vidriera_start",
+            "vidriera_id",
+            "start_date",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    vidriera_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("vidrieras.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    vidriera: Mapped[Vidriera] = relationship(back_populates="cycles")
+
+    @property
+    def status(self) -> str:
+        if self.end_date is None:
+            return "active"
+        return "finalized"

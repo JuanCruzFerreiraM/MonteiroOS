@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 QUINTA_CODE = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 VIDRIERA_CODE = re.compile(r"^([A-Z][A-Z0-9]{1,11})-V([0-9]+)$")
@@ -95,3 +96,27 @@ def normalize_notes(value: str | None) -> str | None:
 
 def display_cantero_code(vidriera_code: str, number: int) -> str:
     return f"{vidriera_code}-C{number}"
+
+
+def cycle_status(end_date: date | None) -> str:
+    """Active while the cycle has no end date. Finalized once it has one."""
+    if end_date is None:
+        return "active"
+    return "finalized"
+
+
+def periods_overlap(
+    start_a: date,
+    end_a: date | None,
+    start_b: date,
+    end_b: date | None,
+) -> bool:
+    """Inclusive calendar ranges. A missing end stays open through any later date.
+
+    A cycle that ends on the same day another starts overlaps. The next calendar
+    day does not. ``date.max`` stands in for the open end used by the database
+    exclusion constraint (``infinity``).
+    """
+    end_of_a = date.max if end_a is None else end_a
+    end_of_b = date.max if end_b is None else end_b
+    return start_a <= end_of_b and start_b <= end_of_a

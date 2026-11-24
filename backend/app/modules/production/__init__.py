@@ -1,1 +1,1 @@
-"""Physical production hierarchy: quintas, vidrieras, and canteros."""
+"""Physical production hierarchy: quintas, vidrieras, canteros, and cycles."""
