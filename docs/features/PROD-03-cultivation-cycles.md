@@ -4,7 +4,7 @@
 - ID: PROD-03
 - Module: Production
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE`
 - Dependencies: PROD-01
@@ -33,6 +33,16 @@ Partial harvests do not open a second cycle and do not finalize the current one.
 - After finalizing, a new cycle can start.
 - Cycle periods for the same vidriera cannot overlap.
 
+## Approved decisions
+
+- The cycle starts on the actual planting date. That date is the cycle start. It ends only when an operator finalizes it and records the end date. A partial harvest does not finalize the cycle and does not start another one.
+- Cleaning, preparation, and maintenance done before planting are not assigned to the next cycle. They can later be recorded on the vidriera with no cycle. This feature does not infer an owner, allocate cost, or attach that work to a future cycle. Cost attribution for preparatory work stays outside the MVP. [OQ-23](../OPEN_QUESTIONS.md#oq-23) remains open for the local name and for whether operators treat the work as part of the next crop.
+- One vidriera has many historical cycles and at most one active cycle. Every cycle belongs to exactly one vidriera and covers that vidriera as a whole. Canteros do not have their own cycles.
+- Starting a cycle does not require a flower type, variety, color, commercial size, crop allocation, or harvest quantity.
+- Status is not stored. An empty end date means the cycle is active. A recorded end date means it is finalized, so the two facts cannot disagree.
+- Dates are calendar dates. Ranges are inclusive: a cycle that ends on the day another starts overlaps, and the next calendar day does not. An open cycle occupies every later date.
+- Dates and notes may be corrected in place. The correction keeps the cycle identifier and the vidriera, keeps an active cycle active, and keeps a finalized cycle finalized. It is rejected when the new period would overlap another cycle of the same vidriera. Previous values are not retained. An audit log is not part of this feature.
+
 ## Business Rules
 
 - One active top-level cycle per vidriera. The vidriera is planted as a whole. See [ADR 0003](../decisions/0003-one-active-cultivation-cycle.md).
@@ -45,7 +55,7 @@ Partial harvests do not open a second cycle and do not finalize the current one.
 | Fact | Required |
 | --- | --- |
 | Vidriera | Yes |
-| Status: active or finalized | Yes |
+| Status: active or finalized | Yes. Derived from the end date. It is not a separate column. |
 | Planting date, stored as the cycle start | Yes |
 | End date | Required when finalized; empty while active |
 | Notes | No |
@@ -77,8 +87,10 @@ Partial harvests do not open a second cycle and do not finalize the current one.
 ## Out of Scope
 
 - Crop allocation (PROD-04).
-- Automatically attaching operations (OPS-01 chooses the cycle at recording time).
-- Reopening a finalized cycle. Corrections to dates may be edited with validation; the status does not silently return to active if another active cycle exists.
+- Automatically attaching operations, including pre-planting work (OPS-01 chooses the cycle at recording time).
+- Cost attribution for preparation done without a cycle.
+- Reopening a finalized cycle. Corrections to dates may be edited with validation; the status does not silently return to active.
+- An audit log of the values replaced by a correction.
 - Nested cycles inside canteros.
 
 ## Dependencies & Integration Points
@@ -89,4 +101,10 @@ Partial harvests do not open a second cycle and do not finalize the current one.
 
 ## Open Questions
 
-- [OQ-23](../OPEN_QUESTIONS.md#oq-23) is non-blocking. This feature allows a vidriera to exist with no active cycle.
+- [OQ-23](../OPEN_QUESTIONS.md#oq-23) is non-blocking. A vidriera may exist with no active cycle, and preparatory work stays there until someone records it against a cycle on purpose.
+
+## Implementation notes
+
+The behaviors above are covered by the API, the database constraints, and the vidriera screen. The feature stays In Progress until that behavior is accepted. The acceptance item about a harvest leaving the cycle active waits for HARV-01, which is the feature that records a harvest.
+
+Overlap is rejected in PostgreSQL with an exclusion constraint. It uses the `btree_gist` extension because the constraint compares the vidriera identifier with equality and a date range with overlap. Core GiST has no equality operator class for `uuid`. Downgrade drops the cycle table and leaves the extension installed.

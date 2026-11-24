@@ -97,6 +97,8 @@ The conceptual model is not a command to create one table per noun. A specificat
 
 PROD-06 persists approximate GeoJSON boundaries in nullable JSONB columns on the existing quinta and vidriera rows. The first mapping release does not add PostGIS and does not store satellite tiles. Without an Esri key, imagery is the Instituto Geográfico Nacional orthophoto. With a key, imagery is requested from Esri World Imagery through a Next.js proxy when the map is open. The provider can be replaced without redrawing the stored polygons. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the licensing notes.
 
+PROD-03 adds one row per cultivation cycle. The planting date is the start, and the cycle stays active until an operator records an end date. A second open cycle and any inclusive overlap are rejected in PostgreSQL. The overlap constraint uses `btree_gist` so the vidriera identifier and the date range can be compared together. Preparation before planting is not attached to a cycle.
+
 ## File storage
 
 TRACE-02 is the first feature that needs files. Photographs belong in an object-storage or filesystem location behind the API, with metadata in PostgreSQL. The concrete store is chosen in that feature. It is not introduced before then.
