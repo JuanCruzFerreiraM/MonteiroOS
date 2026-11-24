@@ -267,7 +267,7 @@ Do not convert an open question into a rule inside code.
 - Affected features: [OPS-01](features/OPS-01-operation-registration.md), [PROD-03](features/PROD-03-cultivation-cycles.md)
 - Importance: Medium
 - Blocking: Non-blocking. An operation can be saved with no cycle.
-- Current knowledge: Preparation must not be forced onto an unrelated cycle. The local name for that work is not documented.
+- Current knowledge: Preparation must not be forced onto an unrelated cycle. PROD-03 leaves that work on the vidriera with no cycle. It does not allocate the cost or attach the work to the next cycle. The local name is not documented, and it is not decided whether operators see the work as part of the next crop.
 - Required validation: Ask what operators call bed preparation and whether they see it as part of the next cycle.
 
 <a id="oq-24"></a>

@@ -1,11 +1,13 @@
 import Link from "next/link";
 
 import { ActiveToggleForm } from "@/app/produccion/forms";
+import { CycleSection } from "@/components/production/cycle-panel";
 import {
   CanteroList,
   StatusBadge,
 } from "@/components/production/production-views";
 import { readJson } from "@/lib/backend";
+import { suggestedClosingDate, type CycleCollection } from "@/lib/cycles";
 import type { VidrieraDetail } from "@/lib/production";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +18,10 @@ export default async function VidrieraDetailPage({
   params: Promise<{ vidrieraId: string }>;
 }) {
   const { vidrieraId } = await params;
-  const vidriera = await readJson<VidrieraDetail>(
-    `/api/production/vidrieras/${vidrieraId}`,
-  );
+  const [vidriera, cycles] = await Promise.all([
+    readJson<VidrieraDetail>(`/api/production/vidrieras/${vidrieraId}`),
+    readJson<CycleCollection>(`/api/production/vidrieras/${vidrieraId}/cycles`),
+  ]);
   if (!vidriera.ok) {
     return <p role="alert">{vidriera.message}</p>;
   }
@@ -63,13 +66,12 @@ export default async function VidrieraDetailPage({
         </h3>
         <CanteroList vidrieraId={record.id} canteros={record.canteros} />
       </section>
-      <section className="rounded-lg border border-line bg-surface px-5 py-4">
-        <h3 className="text-sm font-semibold">Ciclo e historial</h3>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          Los ciclos de cultivo y el historial de actividad todavía no están
-          disponibles.
-        </p>
-      </section>
+      <CycleSection
+        vidrieraId={record.id}
+        cycles={cycles.ok ? cycles.data : null}
+        loadError={cycles.ok ? undefined : cycles.message}
+        suggestedEndDate={suggestedClosingDate()}
+      />
     </div>
   );
 }

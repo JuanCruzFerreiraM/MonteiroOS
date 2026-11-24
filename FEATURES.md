@@ -49,7 +49,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | PROD-01 | Farms, Vidrieras & Beds | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-01-farms-vidrieras-beds.md) |
 | PROD-06 | Farm Visual Mapping | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-06-farm-visual-mapping.md) |
 | PROD-02 | Flower Type, Variety & Classifications | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-02-crop-variety-catalog.md) |
-| PROD-03 | Cultivation Cycle Management | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-03-cultivation-cycles.md) |
+| PROD-03 | Cultivation Cycle Management | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-03-cultivation-cycles.md) |
 | PROD-04 | Crop Allocation Within a Cycle | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-04-crop-allocation.md) |
 | PROD-05 | Medianero Assignment History | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/PROD-05-medianero-assignment-history.md) |
 | INV-01 | Product Catalog | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/INV-01-product-catalog.md) |

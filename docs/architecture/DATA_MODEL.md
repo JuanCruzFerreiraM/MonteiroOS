@@ -129,9 +129,11 @@ Deleting a record that other history points at is rejected. The user deactivates
 
 - Physical records, people, products, and units have an active flag. Inactive records remain on historical links.
 - Medianero assignments and person roles store start and optional end.
-- Cycles store start and, once finalized, end. Finalized cycles stay readable.
+- Cycles store the planting date as the start and, once finalized, the end. An empty end date means the cycle is active, so status is not stored separately. Finalized cycles stay readable under the same identifier.
+- Cycle dates are calendar dates. Periods of one vidriera are inclusive and must not overlap, including a shared boundary day. PostgreSQL enforces that with a `btree_gist` exclusion constraint, because the comparison needs uuid equality together with a date range. An open cycle runs through every later date.
+- A cycle's dates and notes may be corrected in place. The correction keeps the identifier and the vidriera, keeps an active cycle active, keeps a finalized cycle finalized, and is rejected when it would overlap another cycle. PROD-03 does not retain the previous values. An audit trail for those corrections is deferred.
 - Operations, harvests, movements, purchases, dispatches, sales, and receipts store the business time of the event and the time the record was written.
-- Closing or correcting a record does not rewrite an earlier assignment, cycle, or operation in place without leaving the previous values observable. Implementation can use an update with timestamps or an explicit correction. Silent replacement is not acceptable.
+- Closing or correcting any other record does not rewrite an earlier assignment or operation in place without leaving the previous values observable. Implementation can use an update with timestamps or an explicit correction. Silent replacement is not acceptable.
 
 ## Cross-module references
 

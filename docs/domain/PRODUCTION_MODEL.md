@@ -53,7 +53,7 @@ Canteros are not given polygons in the first map. [PROD-06](../features/PROD-06-
 
 ### Cultivation cycles
 
-A vidriera is planted as a whole at the start of a cultivation cycle.
+A vidriera is planted as a whole at the start of a cultivation cycle. The cycle starts on the actual planting date.
 
 A vidriera must not have two active top-level cultivation cycles at the same time.
 
@@ -61,7 +61,9 @@ One cycle may include more than one variety. Those varieties may share a cantero
 
 During a cycle the business records operations, observations, and repeated partial harvests. Partial harvesting does not finalize the cycle. When harvesting and the associated work are finished, a person can finalize it. Finalized cycles stay queryable.
 
-Work that prepares a vidriera between cycles must be recordable without attaching it to an unrelated cycle.
+Work that prepares a vidriera before planting, or between cycles, must be recordable without attaching it to a cycle. It is not assigned to the next cycle automatically, and its cost is not allocated by the cycle record. Whether operators treat that work as part of the next crop remains [OQ-23](../OPEN_QUESTIONS.md#oq-23).
+
+A person may correct a cycle's dates and notes. The cycle keeps its identity and its vidriera. The correction cannot overlap another cycle of that vidriera, cannot close an active cycle, and cannot reopen a finalized one.
 
 ### Flower classification
 
