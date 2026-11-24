@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.modules.operations.catalog import INTERVAL_TYPES, OPERATION_LABELS
 from app.modules.operations.clock import reject_future, utc_now
-from app.modules.operations.models import OccurrenceResolution, Operation
+from app.modules.operations.models import (
+    OccurrenceResolution,
+    Operation,
+    RecurringOperationSchedule,
+)
 from app.modules.operations.schemas import (
     OperationCreate,
     OperationRead,
@@ -83,11 +87,22 @@ def update_operation(
     fields = payload.model_fields_set
     if not fields:
         raise DomainError(422, "No hay cambios para guardar.")
-    if "operation_type" in fields and payload.operation_type is not None:
+    if "operation_type" in fields and payload.operation_type not in (
+        None,
+        operation.operation_type,
+    ):
+        if operation.origin == "scheduled":
+            raise DomainError(
+                422,
+                "La operación programada conserva el tipo de la programación.",
+            )
         operation.operation_type = payload.operation_type
+    previous_start = operation.interval_start
+    previous_end = operation.interval_end
     if "occurred_at" in fields and payload.occurred_at is not None:
         reject_future(payload.occurred_at, "fecha y hora")
-        operation.occurred_at = payload.occurred_at
+        if operation.origin != "scheduled":
+            operation.occurred_at = payload.occurred_at
     if "cycle_id" in fields:
         _require_cycle(session, operation.vidriera_id, payload.cycle_id)
         operation.cycle_id = payload.cycle_id
@@ -103,23 +118,69 @@ def update_operation(
             payload.interval_end if "interval_end" in fields else operation.interval_end
         )
         interval = _completed_interval(operation.operation_type, start, end)
-        operation.interval_start = interval[0] if interval else None
-        operation.interval_end = interval[1] if interval else None
-        operation.timing_basis = "operator_entered" if interval else None
+        new_start = interval[0] if interval else None
+        new_end = interval[1] if interval else None
+        changed = new_start != previous_start or new_end != previous_end
+        operation.interval_start = new_start
+        operation.interval_end = new_end
+        if operation.origin == "scheduled":
+            if changed:
+                operation.timing_basis = "operator_entered"
+        else:
+            operation.timing_basis = "operator_entered" if interval else None
     elif operation.operation_type not in INTERVAL_TYPES:
         operation.interval_start = None
         operation.interval_end = None
         operation.timing_basis = None
     if operation.origin == "scheduled":
         _keep_scheduled_interval(operation)
-        if "interval_start" in fields or "interval_end" in fields:
-            if "occurred_at" not in fields:
-                operation.occurred_at = operation.interval_start
+        _align_scheduled_moment(operation, fields, payload)
+        _require_schedule_type(session, operation)
         _sync_resolution(session, operation)
     operation.updated_at = utc_now()
     _commit(session)
     session.refresh(operation)
     return _read(operation)
+
+
+def _align_scheduled_moment(
+    operation: Operation,
+    fields: set[str],
+    payload: OperationUpdate,
+) -> None:
+    if (
+        "occurred_at" in fields
+        and payload.occurred_at is not None
+        and payload.occurred_at != operation.interval_start
+    ):
+        raise DomainError(
+            422,
+            "En una confirmación programada, la fecha y hora es el inicio real.",
+        )
+    operation.occurred_at = operation.interval_start
+
+
+def _require_schedule_type(session: Session, operation: Operation) -> None:
+    resolution = (
+        None
+        if operation.resolution_id is None
+        else session.get(OccurrenceResolution, operation.resolution_id)
+    )
+    revision = (
+        None
+        if resolution is None
+        else session.get(RecurringOperationSchedule, resolution.revision_id)
+    )
+    if (
+        resolution is None
+        or revision is None
+        or resolution.operation_type != revision.operation_type
+        or operation.operation_type != resolution.operation_type
+    ):
+        raise DomainError(
+            422,
+            "La operación programada conserva el tipo de la programación.",
+        )
 
 
 def _keep_scheduled_interval(operation: Operation) -> None:

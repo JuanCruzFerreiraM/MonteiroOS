@@ -49,25 +49,42 @@ export async function updateOperation(
   formData: FormData,
 ): Promise<FormState> {
   const operationId = String(formData.get("operation_id") ?? "");
+  const scheduled = String(formData.get("origin") ?? "") === "scheduled";
   const operationType = String(formData.get("operation_type") ?? "");
-  const occurred = String(formData.get("occurred_at") ?? "");
-  const invalid = occurredAtError(occurred);
-  if (invalid) {
-    return { error: invalid };
-  }
   const body: Record<string, unknown> = {
-    operation_type: operationType,
-    occurred_at: fromLocalInput(occurred),
     cycle_id: optionalText(formData.get("cycle_id")),
     notes: optionalText(formData.get("notes")),
   };
-  const interval = intervalPayload(operationType, formData);
-  if (interval.error) {
-    return { error: interval.error };
-  }
-  if (acceptsInterval(operationType)) {
-    body.interval_start = interval.fields.interval_start ?? null;
-    body.interval_end = interval.fields.interval_end ?? null;
+  if (scheduled) {
+    const start = String(formData.get("interval_start") ?? "");
+    const end = String(formData.get("interval_end") ?? "");
+    if (!start || !end) {
+      return { error: "El intervalo real necesita inicio y fin." };
+    }
+    const invalid = intervalError(start, end);
+    if (invalid) {
+      return { error: invalid };
+    }
+    const actualStart = fromLocalInput(start);
+    body.occurred_at = actualStart;
+    body.interval_start = actualStart;
+    body.interval_end = fromLocalInput(end);
+  } else {
+    const occurred = String(formData.get("occurred_at") ?? "");
+    const invalid = occurredAtError(occurred);
+    if (invalid) {
+      return { error: invalid };
+    }
+    body.operation_type = operationType;
+    body.occurred_at = fromLocalInput(occurred);
+    const interval = intervalPayload(operationType, formData);
+    if (interval.error) {
+      return { error: interval.error };
+    }
+    if (acceptsInterval(operationType)) {
+      body.interval_start = interval.fields.interval_start ?? null;
+      body.interval_end = interval.fields.interval_end ?? null;
+    }
   }
   const response = await save(
     `/api/operations/operations/${operationId}`,

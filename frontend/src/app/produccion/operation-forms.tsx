@@ -72,20 +72,41 @@ export function OperationEditForm({
 }) {
   const [state, action] = useActionState(updateOperation, initialState);
   const [type, setType] = useState<string>(operation.operation_type);
+  const scheduled = operation.origin === "scheduled";
   return (
     <form action={action} className="max-w-xl space-y-4">
       <FormError message={state.error} />
       <input type="hidden" name="operation_id" value={operation.id} />
-      <TypeField value={type} onChange={setType} />
-      <MomentField
-        id="occurred-at"
-        name="occurred_at"
-        label="Fecha y hora"
-        defaultValue={toLocalInput(operation.occurred_at)}
-        required
-      />
+      {scheduled ? (
+        <input type="hidden" name="origin" value="scheduled" />
+      ) : null}
+      {scheduled ? (
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Tipo</p>
+          <p className="text-sm">{operation.operation_label}</p>
+        </div>
+      ) : (
+        <TypeField value={type} onChange={setType} />
+      )}
+      {scheduled ? null : (
+        <MomentField
+          id="occurred-at"
+          name="occurred_at"
+          label="Fecha y hora"
+          defaultValue={toLocalInput(operation.occurred_at)}
+          required
+        />
+      )}
       <CycleField cycles={cycles} defaultValue={operation.cycle_id ?? ""} />
-      {acceptsInterval(type) ? (
+      {scheduled ? (
+        <IntervalFields
+          start={toLocalInput(operation.interval_start)}
+          end={toLocalInput(operation.interval_end)}
+          required
+          note="El inicio real es la fecha de la operación. Corregirlo no cambia el horario programado."
+        />
+      ) : null}
+      {!scheduled && acceptsInterval(type) ? (
         <IntervalFields
           start={toLocalInput(operation.interval_start)}
           end={toLocalInput(operation.interval_end)}
@@ -188,27 +209,30 @@ function CycleField({
 function IntervalFields({
   start = "",
   end = "",
+  required = false,
+  note = "El intervalo real es opcional. Si lo completa, indique inicio y fin. Un turno que cruza la medianoche termina al día siguiente.",
 }: {
   start?: string;
   end?: string;
+  required?: boolean;
+  note?: string;
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm leading-6 text-muted">
-        El intervalo real es opcional. Si lo completa, indique inicio y fin. Un
-        turno que cruza la medianoche termina al día siguiente.
-      </p>
+      <p className="text-sm leading-6 text-muted">{note}</p>
       <MomentField
         id="interval-start"
         name="interval_start"
         label="Inicio real"
         defaultValue={start}
+        required={required}
       />
       <MomentField
         id="interval-end"
         name="interval_end"
         label="Fin real"
         defaultValue={end}
+        required={required}
       />
     </div>
   );

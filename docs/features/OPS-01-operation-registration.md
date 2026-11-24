@@ -60,7 +60,8 @@ One save creates one operation. It is not copied onto the four canteros or onto 
 ## User Interactions
 
 - On the vidriera detail, choose a type, confirm the time and the cycle default, add optional notes, and save. Lighting and nylon may also include an actual interval.
-- Correct the type, the occurrence time, the cycle, and the notes. Clearing the cycle is explicit. The vidriera stays the same, the identifier stays the same, and the record is not deleted.
+- Correct the type, the occurrence time, the cycle, and the notes of a manual operation. Clearing the cycle is explicit. The vidriera stays the same, the identifier stays the same, and the record is not deleted.
+- A confirmed scheduled operation keeps the type of its schedule. Its occurrence time is the actual interval start, so those two values are saved together. The expected interval stays on the resolution.
 
 ## Acceptance Criteria
 

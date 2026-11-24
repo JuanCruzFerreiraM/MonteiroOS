@@ -61,7 +61,7 @@ Repeating the same outcome is idempotent and does not create another operation. 
 
 The default actual interval in a batch may copy the expected interval. That copy is stored as `assumed_from_schedule`. It is a value the operator accepted, not a measurement and not a sensor reading. If the operator enters different start and end times, the basis is `operator_entered`. Confirmation method for this version is `manual`, with the time of the confirmation.
 
-Later correction of the actual interval, the type within lighting and nylon, the cycle, and the notes uses the OPS-01 operation. The correction does not change the expected timestamps stored on the resolution.
+Later correction of the actual interval, the cycle, and the notes uses the OPS-01 operation. The operation keeps the schedule type: changing lighting into nylon, or the reverse, is rejected. The occurrence time is stored as the same instant as the actual start. Sending a different occurrence time is rejected. An unchanged actual interval keeps its timing basis, `assumed_from_schedule` or `operator_entered`. The correction does not change the expected timestamps stored on the resolution.
 
 ## Scheduled and actual timestamps
 
@@ -94,5 +94,5 @@ Calendar days and clock times are interpreted in America/Argentina/Buenos_Aires.
 - No electricity, dose, worker assignment, harvest, cost, or forecast.
 - No background job. Occurrences exist when a bounded range is queried, plus the explicit resolutions.
 - Nylon is one coverage interval, not separate mandatory raise and lower operations.
-- A confirmed scheduled operation stays lighting or nylon so the actual interval remains.
+- A confirmed scheduled operation keeps the type of its schedule revision. The database requires that type on the operation, the resolution, and the revision together, and requires the occurrence time to equal the actual start.
 - TRACE-01's full history browser is not part of this feature. The stored operations, resolutions, and calculated occurrences are enough for it to distinguish expected work from confirmed work.

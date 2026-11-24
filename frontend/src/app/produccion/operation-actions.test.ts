@@ -98,4 +98,30 @@ describe("operation actions", () => {
     expect(body.vidriera_id).toBeUndefined();
     expect(body.operation_type).toBe("observation");
   });
+
+  it("sends the actual start as the occurrence time of a scheduled operation", async () => {
+    backendFetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: "op-1" }), { status: 200 }),
+    );
+
+    await expect(
+      updateOperation(
+        {},
+        form({
+          operation_id: "op-1",
+          origin: "scheduled",
+          operation_type: "irrigation",
+          interval_start: "2024-06-01T18:30",
+          interval_end: "2024-06-02T07:45",
+          cycle_id: "",
+        }),
+      ),
+    ).rejects.toThrow("REDIRECT:/produccion/operaciones/op-1");
+
+    const body = JSON.parse(String(backendFetch.mock.calls[0][1].body));
+    expect(body.operation_type).toBeUndefined();
+    expect(body.occurred_at).toBe("2024-06-01T18:30:00-03:00");
+    expect(body.interval_start).toBe(body.occurred_at);
+    expect(body.interval_end).toBe("2024-06-02T07:45:00-03:00");
+  });
 });

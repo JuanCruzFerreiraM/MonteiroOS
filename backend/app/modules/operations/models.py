@@ -69,6 +69,15 @@ class Operation(Base):
             ")",
             name="ck_operations_timing_basis",
         ),
+        CheckConstraint(
+            "origin <> 'scheduled' OR occurred_at = interval_start",
+            name="ck_operations_scheduled_moment",
+        ),
+        ForeignKeyConstraint(
+            ["resolution_id", "operation_type"],
+            ["occurrence_resolutions.id", "occurrence_resolutions.operation_type"],
+            name="fk_operations_resolution_type",
+        ),
         ForeignKeyConstraint(
             ["cycle_id", "vidriera_id"],
             ["cultivation_cycles.id", "cultivation_cycles.vidriera_id"],
@@ -155,6 +164,7 @@ class RecurringOperationSchedule(Base):
             "effective_start",
             name="uq_schedules_series_start",
         ),
+        UniqueConstraint("id", "operation_type", name="uq_schedules_id_type"),
         Index(
             "ix_schedules_vidriera_type",
             "vidriera_id",
@@ -207,6 +217,15 @@ class OccurrenceResolution(Base):
             "series_id",
             "occurrence_date",
             name="uq_resolutions_series_date",
+        ),
+        UniqueConstraint("id", "operation_type", name="uq_resolutions_id_type"),
+        ForeignKeyConstraint(
+            ["revision_id", "operation_type"],
+            [
+                "recurring_operation_schedules.id",
+                "recurring_operation_schedules.operation_type",
+            ],
+            name="fk_resolutions_revision_type",
         ),
         CheckConstraint(
             "outcome IN ('confirmed', 'not_occurred')",

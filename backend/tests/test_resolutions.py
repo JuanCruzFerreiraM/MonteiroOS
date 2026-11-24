@@ -260,6 +260,8 @@ def test_corrects_actual_times_without_changing_the_expected_interval(
     )
     assert corrected.status_code == 200
     assert corrected.json()["timing_basis"] == "operator_entered"
+    assert corrected.json()["occurred_at"] == "2024-06-01T21:40:00Z"
+    assert corrected.json()["operation_type"] == "black_nylon"
     with engine.begin() as connection:
         connection.execute(
             text(
@@ -288,6 +290,61 @@ def test_corrects_actual_times_without_changing_the_expected_interval(
         },
     )
     assert blocked.status_code == 422
+
+
+def test_scheduled_operation_keeps_its_type_and_actual_start(
+    client: TestClient,
+) -> None:
+    vidriera = _vidriera(client)
+    schedule = _lighting(client, vidriera["id"])
+    resolved = client.post(
+        f"/api/operations/vidrieras/{vidriera['id']}/occurrences/resolve",
+        json={
+            "series_id": schedule["series_id"],
+            "occurrence_date": "2024-06-01",
+            "outcome": "confirmed",
+        },
+    )
+    assert resolved.status_code == 200
+    operation_id = resolved.json()["operation_id"]
+    changed_type = client.patch(
+        f"/api/operations/operations/{operation_id}",
+        json={"operation_type": "black_nylon"},
+    )
+    mismatched = client.patch(
+        f"/api/operations/operations/{operation_id}",
+        json={
+            "occurred_at": "2024-06-01T21:30:00-03:00",
+            "interval_start": "2024-06-01T22:00:00-03:00",
+            "interval_end": "2024-06-02T02:00:00-03:00",
+        },
+    )
+    noted = client.patch(
+        f"/api/operations/operations/{operation_id}",
+        json={"notes": "el timer sonó"},
+    )
+    stored = client.get(f"/api/operations/operations/{operation_id}").json()
+    occurrence = client.get(
+        f"/api/operations/vidrieras/{vidriera['id']}/occurrences",
+        params={
+            "from": "2024-06-01",
+            "to": "2024-06-01",
+            "operation_type": "artificial_lighting",
+        },
+    ).json()[0]
+
+    assert changed_type.status_code == 422
+    assert "tipo" in changed_type.json()["detail"]
+    assert mismatched.status_code == 422
+    assert "inicio real" in mismatched.json()["detail"]
+    assert noted.status_code == 200
+    assert stored["operation_type"] == "artificial_lighting"
+    assert stored["occurred_at"] == stored["interval_start"] == "2024-06-02T01:00:00Z"
+    assert stored["timing_basis"] == "assumed_from_schedule"
+    assert occurrence["operation_type"] == "artificial_lighting"
+    assert occurrence["expected_start"] == "2024-06-02T01:00:00Z"
+    assert occurrence["expected_end"] == "2024-06-02T05:00:00Z"
+    assert occurrence["actual_start"] == occurrence["expected_start"]
 
 
 def test_rejects_a_future_occurrence_and_keeps_manual_records(
