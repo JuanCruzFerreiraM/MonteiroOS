@@ -3,12 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type {} from "@geoman-io/leaflet-geoman-free";
-import type {
-  FeatureGroup,
-  Map as LeafletMap,
-  PathOptions,
-  Polygon,
-} from "leaflet";
+import type { FeatureGroup, Map as LeafletMap, Polygon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
@@ -28,7 +23,9 @@ import type {
   GeoJsonPolygon,
   QuintaMap,
 } from "@/lib/production";
+import { dispatchPolygonClick } from "@/lib/map-interaction";
 import { MapEditorPanel, type MapDraft } from "./map-editor-panel";
+import { placePolygon } from "./map-geometry";
 import { MapStatus } from "./map-status";
 
 type LeafletModule = typeof import("leaflet");
@@ -146,7 +143,14 @@ export function FarmMap({
             opacity: 1,
           });
           layer.on("click", () => {
-            setSelectedId(vidriera.id);
+            dispatchPolygonClick(
+              "edit",
+              { kind: "vidriera", id: vidriera.id },
+              {
+                navigate: () => undefined,
+                select: setSelectedId,
+              },
+            );
           });
         },
       );
@@ -582,30 +586,6 @@ export function FarmMap({
       </div>
     </div>
   );
-}
-
-function placePolygon(
-  leaflet: LeafletModule,
-  group: FeatureGroup,
-  geometry: GeoJsonPolygon | null,
-  style: PathOptions,
-  keep: (layer: Drawable) => void,
-): boolean {
-  if (!geometry) {
-    return true;
-  }
-  try {
-    const collection = leaflet.geoJSON(geometry, { style: () => style });
-    const layer = collection.getLayers()[0];
-    if (!(layer instanceof leaflet.Polygon)) {
-      return false;
-    }
-    group.addLayer(layer);
-    keep(layer as Drawable);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function geometryFromLayer(layer: {

@@ -19,6 +19,15 @@ body {
   font-family: var(--font-sans);
 }
 
+.farm-overview-map.leaflet-container {
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.leaflet-interactive.vidriera-polygon {
+  cursor: pointer;
+}
+
 .leaflet-tooltip.vidriera-code-label {
   border: 1px solid #1f6b45;
   color: #1a211c;
