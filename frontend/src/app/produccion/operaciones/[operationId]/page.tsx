@@ -80,6 +80,12 @@ export default async function OperationDetailPage({
         ) : null}
       </dl>
       {basis ? <p className="text-sm leading-6 text-muted">{basis}</p> : null}
+      {record.resolution_id ? (
+        <p className="text-sm leading-6 text-muted">
+          El intervalo de esta ficha es el horario real confirmado. Corregirlo
+          no cambia el horario que estaba programado.
+        </p>
+      ) : null}
       <section className="space-y-3" aria-labelledby="correccion-operacion">
         <h3 id="correccion-operacion" className="text-sm font-semibold">
           Corregir
