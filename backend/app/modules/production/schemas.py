@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -105,6 +106,65 @@ class CanteroUpdate(BaseModel):
 class NextVidrieraCode(BaseModel):
     code: str
     number: int
+
+
+class BoundaryWarningRead(BaseModel):
+    code: str
+    message: str
+    vidriera_id: uuid.UUID | None = None
+    vidriera_code: str | None = None
+
+
+class BoundaryRead(BaseModel):
+    """An existing production record. `geometry` is null when it has no boundary."""
+
+    id: uuid.UUID
+    geometry: dict[str, Any] | None
+    warnings: list[BoundaryWarningRead]
+
+
+class BoundaryWrite(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    geometry: dict[str, Any]
+    mode: Literal["replace", "attach"] = "replace"
+
+    @model_validator(mode="before")
+    @classmethod
+    def require_polygon_body(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            raise DomainError(422, "El cuerpo debe incluir la geometría del polígono.")
+        unknown = set(value) - {"geometry", "mode"}
+        if unknown:
+            raise DomainError(422, "El cuerpo solo admite geometry y mode.")
+        if "geometry" not in value:
+            raise DomainError(422, "Falta la geometría del polígono.")
+        if not isinstance(value.get("geometry"), dict):
+            raise DomainError(
+                422,
+                "La geometría debe ser un objeto GeoJSON Polygon.",
+            )
+        if "mode" in value and value["mode"] not in {"replace", "attach"}:
+            raise DomainError(422, "El modo debe ser replace o attach.")
+        return value
+
+
+class MapVidrieraRead(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+    active: bool
+    geometry: dict[str, Any] | None
+    warnings: list[BoundaryWarningRead]
+
+
+class QuintaMapRead(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+    active: bool
+    geometry: dict[str, Any] | None
+    vidrieras: list[MapVidrieraRead]
 
 
 def _reject_fields(value: object, names: set[str], detail: str) -> object:

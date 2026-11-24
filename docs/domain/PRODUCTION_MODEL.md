@@ -41,7 +41,7 @@ A quinta and a vidriera may each have one approximate geographic boundary. The b
 
 Boundaries are stored as geographic coordinates so they survive a change of satellite imagery. Imagery itself is a basemap from an external provider. It does not need to be current. The operator does not supply the base image.
 
-A drawn polygon should normally fall inside its quinta, but manual boundaries are approximate. Invalid shapes are rejected. A shape is not silently rewritten to look tidy. Overlap between vidrieras, and a small extension past the quinta edge, stay visible as warnings until [OQ-30](../OPEN_QUESTIONS.md#oq-30) is decided.
+A drawn polygon should normally fall inside its quinta, but manual boundaries are approximate. Invalid shapes are rejected. A shape is not silently rewritten to look tidy. [OQ-30](../OPEN_QUESTIONS.md#oq-30) is resolved: overlap and a small extension past the quinta edge stay visible as warnings, and a polygon that does not meet the quinta is rejected.
 
 Three areas stay distinct:
 

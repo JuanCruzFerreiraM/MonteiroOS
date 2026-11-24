@@ -50,9 +50,10 @@ def database_programming_error(
 
 def _missing_relation(exc: ProgrammingError) -> bool:
     orig = exc.orig
-    if getattr(orig, "sqlstate", None) == "42P01":
+    sqlstate = getattr(orig, "sqlstate", None)
+    if sqlstate in {"42P01", "42703"}:
         return True
-    return type(orig).__name__ == "UndefinedTable"
+    return type(orig).__name__ in {"UndefinedTable", "UndefinedColumn"}
 
 
 app = create_app()

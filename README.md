@@ -12,9 +12,9 @@ The running system is a modular monolith:
 
 - A FastAPI application exposes `GET /health` and the Production API under `/api/production`. Health returns `{"status": "ok"}` when PostgreSQL accepts `SELECT 1`, including when the production tables do not exist yet. It returns `503` when PostgreSQL does not respond.
 - Production routes create and edit quintas, vidrieras, and canteros. SQLAlchemy models `Quinta`, `Vidriera`, and `Cantero` live in `backend/app/modules/production/models.py`. Primary keys are server-generated UUIDs. Operational codes are separate unique columns, not keys.
-- The first Alembic revision is `0001_production_hierarchy`. It creates `quintas`, `vidrieras`, and `canteros`, with foreign keys and the uniqueness and check constraints for codes, names, and cantero numbers. It does not insert business records and does not add geometry.
+- Alembic revision `0001_production_hierarchy` creates `quintas`, `vidrieras`, and `canteros`, with foreign keys and the uniqueness and check constraints for codes, names, and cantero numbers. It does not insert business records. Revision `0002_production_boundaries` adds a nullable JSONB `boundary` to quintas and vidrieras. Existing rows keep a null boundary.
 - If that revision has not been applied, a Production request returns `503` and tells the operator to run `alembic upgrade head`. The response does not include SQL and is not an empty quinta list.
-- A Next.js application renders a single-user desktop shell in Spanish. Inicio and Producción are working destinations. The other modules stay listed as not available. Producción lists quintas, opens one quinta, creates a vidriera with four canteros, and edits descriptive data. There is no map.
+- A Next.js application renders a single-user desktop shell in Spanish. Inicio and Producción are working destinations. The other modules stay listed as not available. Producción lists quintas, opens one quinta, creates a vidriera with four canteros, edits descriptive data, and opens a satellite map for one quinta.
 - Docker Compose runs PostgreSQL 18, the API, and the web app together. Compose does not apply Alembic.
 - GitHub Actions runs backend lint, format, and pytest, plus frontend lint and production build.
 
@@ -31,8 +31,13 @@ There is no seeded business data and no logo. The shell uses a small set of inte
 | `POST` | `/api/production/quintas/{quinta_id}/vidrieras` | Create a vidriera and its four canteros |
 | `GET`, `PATCH` | `/api/production/vidrieras/{vidriera_id}` | Read or edit a vidriera |
 | `PATCH` | `/api/production/canteros/{cantero_id}` | Edit a cantero name or active flag |
+| `GET` | `/api/production/quintas/{quinta_id}/map` | Read a quinta and its vidrieras for the map |
+| `GET`, `PUT`, `DELETE` | `/api/production/quintas/{quinta_id}/boundary` | Read, save, or remove the quinta boundary |
+| `GET`, `PUT`, `DELETE` | `/api/production/vidrieras/{vidriera_id}/boundary` | Read, save, or remove one vidriera boundary |
 
-Lists omit inactive records unless `include_inactive=true`. There is no delete route.
+An existing record with no boundary returns `200` and `geometry: null`. A missing record returns `404`. `DELETE` returns `204` and leaves the production record in place. `PUT` can return warnings for overlap or a small overflow. Those warnings are not validation errors.
+
+Lists omit inactive records unless `include_inactive=true`. There is no route that deletes a quinta, vidriera, or cantero.
 
 ### Production screens
 
@@ -42,6 +47,27 @@ Lists omit inactive records unless `include_inactive=true`. There is no delete r
 - `/produccion/quintas/{quintaId}/vidrieras/nueva` suggests a code and creates a vidriera.
 - `/produccion/vidrieras/{vidrieraId}` shows the vidriera and canteros `C1` through `C4`.
 - Edit routes under those paths change descriptive data. A cantero edit cannot change its number or its vidriera.
+- `/produccion/quintas/{quintaId}/mapa` opens that quinta on a map. Saved polygons are drawn when they exist. A quinta without a boundary remains valid.
+
+### Satellite imagery
+
+Without `ESRI_API_KEY`, the map shows the Instituto Geográfico Nacional orthophoto mosaic `mosaicos_vuelos`. The browser requests public tiles from `imagenes.ign.gob.ar`. That layer answers for zoom 11 through 20. A zoom-12 tile of La Plata shows the city and the surrounding greenhouse blocks, and closer tiles of Villa Elisa and Arturo Seguí show streets and buildings. The map keeps the attribution “Instituto Geográfico Nacional de la República Argentina”. Place search then uses the public Nominatim service, biased toward La Plata, and the page credits OpenStreetMap. Those results are not stored.
+
+With `ESRI_API_KEY`, the map uses [Esri World Imagery](https://developers.arcgis.com/rest/basemap-styles/service-data/) through the authenticated ArcGIS Location Platform service:
+
+`https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer`
+
+The key is required only for that Esri path. The unauthenticated `services.arcgisonline.com` World Imagery endpoint is not used. Esri documents that service as requiring an ArcGIS license, and a request to the Location Platform tile URL without a token returns an error body (`Token Required`), even when the HTTP status is 200.
+
+Create a free [ArcGIS Location Platform](https://location.arcgis.com/) account and an API key with **Basemaps** and **Geocoding** privileges. Put it in `ESRI_API_KEY`. The Next.js server sends it as `Authorization: Bearer` when it proxies tiles and place search. The browser only calls `/api/imagery/...` on the same origin. Do not prefix the variable with `NEXT_PUBLIC_`.
+
+Place search uses the ArcGIS Geocoding service `findAddressCandidates` with `forStorage=false`, biased toward the La Plata area, so names such as Villa Elisa and Arturo Seguí can be found. Results are not stored.
+
+Attribution has to stay visible. The map shows `Powered by Esri` plus the `copyrightText` returned by the World Imagery service. If that metadata call fails, the fallback text is the attribution Esri publishes for this service: Esri, Maxar, Earthstar Geographics, and the GIS User Community. Leaflet's own attribution stays as well.
+
+Published Location Platform allowances, from [the pricing page](https://location.arcgis.com/pricing/) and the [Static Basemap Tiles](https://developers.arcgis.com/rest/static-basemap-tiles/) and [Geocoding](https://developers.arcgis.com/rest/geocode/) references checked for this feature: 2,000,000 basemap tiles per month, then $0.15 per 1,000 tiles; 20,000 geocodes that are not stored, then $0.50 per 1,000. Confirm the current figures before relying on them. The service is the current World Imagery map tile service in Esri's developer documentation, not a deprecated API. Esri greenhouse detail around Villa Elisa and Arturo Seguí has not been confirmed visually, because that still requires a key. The IGN orthophoto used without a key has been checked on those towns.
+
+Polygons are GeoJSON in WGS84. Replacing the imagery provider does not require redrawing them.
 
 ### Access boundary
 

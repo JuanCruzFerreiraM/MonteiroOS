@@ -38,7 +38,7 @@ Traceability views (TRACE-01, COMM-05, HARV-03, HARV-04, COST-03) do not own a p
 
 A quinta and a vidriera each have an immutable technical identifier and a stable operational code. A cantero has an immutable technical identifier and a number from 1 to 4. Display labels and location notes are not keys. Codes are not reused after deactivation.
 
-Geographic boundaries are optional and belong to the same Production records. A quinta has at most one boundary. A vidriera has at most one boundary, and only on a quinta that itself has a boundary. A cantero has none in PROD-06. The boundary is GeoJSON in WGS84 longitude and latitude. It is not a second quinta or vidriera, and it is not a measured area.
+Geographic boundaries are optional and belong to the same Production records. A quinta has at most one boundary. A vidriera has at most one boundary, and only on a quinta that itself has a boundary. A cantero has none in PROD-06. The boundary is GeoJSON in WGS84 longitude and latitude. It is not a second quinta or vidriera, and it is not a measured area. The implemented storage is a nullable JSONB `boundary` column on `quintas` and `vidrieras`, added by Alembic revision `0002_production_boundaries`. The diagram below stays conceptual: there is no separate boundary table.
 
 ```mermaid
 erDiagram

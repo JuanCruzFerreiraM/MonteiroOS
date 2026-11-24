@@ -18,7 +18,8 @@ export async function createQuinta(
       name: String(formData.get("name") ?? ""),
       notes: optionalText(formData.get("notes")),
     },
-    (created) => `/produccion/quintas/${(created as Quinta).id}`,
+    (created) =>
+      `/produccion/quintas/${(created as Quinta).id}/mapa?paso=limite`,
   );
 }
 

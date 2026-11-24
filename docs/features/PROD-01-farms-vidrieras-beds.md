@@ -142,7 +142,7 @@ Geographic coordinates are not facts of this feature.
 
 This branch is in progress. It is not integrated and the acceptance criteria above are not marked complete.
 
-The HTTP API lives at `/api/production`. Technical identifiers are UUID primary keys. Operational codes are separate columns and are not foreign keys. A vidriera and its four canteros are inserted in one transaction. Measured area is omitted until CORE-02, so this release does not store a free-text unit. Geographic columns are omitted until PROD-06. The existing primary keys and parent foreign keys are the records that feature will extend.
+The HTTP API lives at `/api/production`. Technical identifiers are UUID primary keys. Operational codes are separate columns and are not foreign keys. A vidriera and its four canteros are inserted in one transaction. Measured area is omitted until CORE-02, so this release does not store a free-text unit. PROD-01 responses omit geometry. PROD-06 stores an optional JSONB boundary on the same rows. The existing primary keys and parent foreign keys are the records that feature extends.
 
 Lists hide inactive records unless `include_inactive=true`. Detail routes still return an inactive record. There is no delete route.
 

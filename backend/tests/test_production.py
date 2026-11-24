@@ -453,6 +453,14 @@ def test_migration_upgrade_downgrade_and_database_constraints() -> None:
                     )
                 )
             )
+            boundary_tables = set(
+                connection.scalars(
+                    text(
+                        "SELECT table_name FROM information_schema.columns "
+                        "WHERE table_schema = 'public' AND column_name = 'boundary'"
+                    )
+                )
+            )
             quinta_id = uuid.uuid4()
             connection.execute(
                 text(
@@ -518,7 +526,7 @@ def test_migration_upgrade_downgrade_and_database_constraints() -> None:
         assert "uq_canteros_vidriera_number" in constraints
         assert "ck_canteros_number" in constraints
         assert "geometry" not in columns
-        assert "boundary" not in columns
+        assert boundary_tables == {"quintas", "vidrieras"}
 
         command.downgrade(config, "base")
         connected = create_engine(url)

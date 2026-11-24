@@ -5,7 +5,7 @@
 - Name: Farm Visual Mapping
 - Module: Production
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE`
 - Dependencies: CORE-01, PROD-01
@@ -28,7 +28,7 @@ The Production module owns the geometry. A boundary is an optional attribute or 
 
 A preferred client approach, to be confirmed when implementation starts, is Leaflet for the map, an external satellite tile API for the imagery, and Leaflet-Geoman or an equivalent tool for drawing and editing polygons. The API and database remain the existing FastAPI application and PostgreSQL. The first release does not require PostGIS. Validated GeoJSON can be stored with the PostgreSQL already in the architecture. PostGIS is a later option only if spatial queries, indexes, or stricter geometry checks justify it. It is not a new infrastructure service.
 
-The imagery provider is not chosen in this specification. [OQ-29](../OPEN_QUESTIONS.md#oq-29) must be answered before provider-specific code is written. Candidates to compare include MapTiler, Mapbox, Google Maps where its current APIs and terms fit this use, and other legitimate satellite or aerial tile services. Standard OpenStreetMap tiles are not satellite imagery. A Google Earth screenshot is not a basemap license. Deprecated APIs are not candidates. Geographic data stays vendor-neutral either way.
+Without `ESRI_API_KEY`, the map uses the Instituto Geográfico Nacional orthophoto `mosaicos_vuelos`. With that key, it uses Esri World Imagery through the authenticated ArcGIS Location Platform service. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records both choices, the attribution, and the published Esri allowances. The unauthenticated public World Imagery endpoint is not used. Standard OpenStreetMap tiles are not the basemap; OpenStreetMap is used only to search for a place name when the Esri key is absent. Geographic data stays vendor-neutral: saved polygons are GeoJSON and do not have to be redrawn if the provider changes. The IGN orthophoto shows greenhouse blocks around La Plata and streets in Villa Elisa and Arturo Seguí.
 
 ## Expected Behavior
 
@@ -73,13 +73,13 @@ Later features may add cycle, operation, harvest, or status overlays. Those over
 - Self-intersections and rings with too few vertices are invalid. The save is rejected and the previous geometry, if any, is left unchanged. The message tells the operator what to correct.
 - The product does not silently move, clip, or simplify a polygon to force it inside the quinta.
 - A vidriera polygon that does not intersect its quinta boundary at all is rejected. That relationship is inconsistent, not an approximation.
-- A polygon that overlaps another vidriera, or that extends slightly outside the quinta, is stored as drawn and shown with a warning. Whether that warning should become a hard rejection is [OQ-30](../OPEN_QUESTIONS.md#oq-30). Until then the geometry is not rewritten and the warning is visible.
+- A polygon that overlaps another vidriera, or that extends slightly outside the quinta, is stored as drawn and shown with a warning. [OQ-30](../OPEN_QUESTIONS.md#oq-30) resolves that behavior for the MVP. “Slightly” means an outside area of at most 15 percent of the vidriera polygon. A larger overflow is rejected. The geometry is not rewritten.
 - Greenhouses need not be aligned, and properties need not be rectangles. Containment is approximate. Cadastral accuracy is not required.
 - Geometry edits do not change technical identifiers or operational codes.
 - Computed polygon area is an approximate footprint. It is not the measured physical area and it is not the productive or cultivated area. This feature does not copy a computed area into measured-area or yield fields.
 - Imagery tiles are requested from the provider when the map is open. They are not downloaded into the application database for the MVP. Saved polygons remain if the tiles fail or the provider changes.
 - Remembering map center and zoom is optional and is never a substitute for the polygon.
-- Provider attribution required by the license is visible on the map. An unrestricted provider secret is not placed in the browser bundle. The concrete authentication method is part of [OQ-29](../OPEN_QUESTIONS.md#oq-29).
+- Provider attribution required by the license is visible on the map: the Instituto Geográfico Nacional when that orthophoto is shown, and “Powered by Esri” when Esri imagery is shown. An Esri API key stays in `ESRI_API_KEY` on the server. It is not placed in the browser bundle. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the authentication method.
 - The map requires a network connection to load imagery. Lack of imagery does not delete stored records.
 
 ## Data Requirements
@@ -155,7 +155,6 @@ This table is not a SQL column plan. An implementation may store the geometry as
 - Native mobile mapping.
 - Geospatial time-series data.
 - IoT sensor mapping.
-- Choosing the commercial imagery vendor. That comparison is [OQ-29](../OPEN_QUESTIONS.md#oq-29).
 - PostGIS, unless a later review shows that ordinary PostgreSQL is not enough.
 
 ## Dependencies & Integration Points
@@ -163,10 +162,29 @@ This table is not a SQL column plan. An implementation may store the geometry as
 - CORE-01 for the desktop shell. The map is a destination inside that shell, at a width of at least 1280 pixels.
 - PROD-01 for quintas, vidrieras, technical identifiers, and operational codes. This feature does not redefine those rules.
 - PROD-03, OPS-01, and TRACE-01 do not depend on the map. The vidriera detail remains their entry for recording work.
-- The browser loads tiles from the provider selected in [OQ-29](../OPEN_QUESTIONS.md#oq-29). The API persists domain records and GeoJSON only.
+- The browser loads tiles through the Next.js proxy for the provider in [OQ-29](../OPEN_QUESTIONS.md#oq-29). The API persists domain records and GeoJSON only.
 - Domain model: [PRODUCTION_MODEL.md](../domain/PRODUCTION_MODEL.md). Conceptual ownership: [DATA_MODEL.md](../architecture/DATA_MODEL.md).
+
+## Current implementation
+
+This feature is in progress. It is not marked implemented, and its acceptance is not complete until the imagery can be inspected with a real API key.
+
+Revision `0002_production_boundaries` adds a nullable JSONB `boundary` column to `quintas` and `vidrieras`. Existing rows stay, and the new column starts null. Downgrade drops those columns and keeps the production rows. There is no PostGIS and no separate geometry table.
+
+Boundary routes live under `/api/production`:
+
+| Method | Path | Result |
+| --- | --- | --- |
+| `GET` | `/quintas/{quinta_id}/boundary` and `/vidrieras/{vidriera_id}/boundary` | `200` with `geometry: null` when the record exists and has no boundary. `404` when the record does not exist. |
+| `PUT` | the same paths | Replaces or attaches a GeoJSON Polygon. Warnings are returned beside a saved geometry. Hard errors are `422`. Attaching when a boundary already exists is `409`. |
+| `DELETE` | the same paths | `204`. The production record remains, including when the boundary was already absent. |
+| `GET` | `/quintas/{quinta_id}/map` | The quinta and its vidrieras, with geometry and placement warnings, for the map screen. |
+
+The map is a client-only Leaflet view inside the existing desktop shell, at `/produccion/quintas/{quintaId}/mapa`. Leaflet-Geoman draws and edits polygons. Creating a quinta still works without a boundary; the next step opens that map. Creating a vidriera from the map uses the PROD-01 creation route and its four canteros. Cancelling a draw does not insert a record. Clicking a polygon selects it, shows its operational code, and the side panel links to the vidriera detail. Vidrieras without a polygon stay in that panel and in the quinta's ordinary list.
+
+Shapely checks ring validity, self-intersection, and polygon intersection. The stored coordinates are the submitted ring.
 
 ## Open Questions
 
-- [OQ-29](../OPEN_QUESTIONS.md#oq-29) blocks the provider-specific imagery client. It does not block the identity or geometry rules above.
-- [OQ-30](../OPEN_QUESTIONS.md#oq-30) asks whether overlap and slight overflow should stay warnings or become rejections. The safe behavior until then is to warn and store the drawn polygon.
+- [OQ-29](../OPEN_QUESTIONS.md#oq-29) is resolved for the MVP provider. Looking at the imagery with a key is still outstanding.
+- [OQ-30](../OPEN_QUESTIONS.md#oq-30) is resolved. Overlap and minor overflow warn. A disconnected polygon and a large overflow are rejected.
