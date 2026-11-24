@@ -1,5 +1,6 @@
 import re
 from datetime import date
+from typing import Literal
 
 QUINTA_CODE = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 VIDRIERA_CODE = re.compile(r"^([A-Z][A-Z0-9]{1,11})-V([0-9]+)$")
@@ -98,7 +99,7 @@ def display_cantero_code(vidriera_code: str, number: int) -> str:
     return f"{vidriera_code}-C{number}"
 
 
-def cycle_status(end_date: date | None) -> str:
+def cycle_status(end_date: date | None) -> Literal["active", "finalized"]:
     """Active while the cycle has no end date. Finalized once it has one."""
     if end_date is None:
         return "active"

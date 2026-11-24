@@ -5,12 +5,17 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
-from app.modules.production import boundaries, services
+from app.modules.production import boundaries, cycles, services
 from app.modules.production.schemas import (
     BoundaryRead,
     BoundaryWrite,
     CanteroRead,
     CanteroUpdate,
+    CycleCollection,
+    CycleCorrection,
+    CycleFinalize,
+    CycleRead,
+    CycleStart,
     NextVidrieraCode,
     QuintaCreate,
     QuintaMapRead,
@@ -203,3 +208,55 @@ def update_cantero(
     session: DbSession,
 ) -> CanteroRead:
     return services.update_cantero(session, cantero_id, payload)
+
+
+@router.get(
+    "/vidrieras/{vidriera_id}/cycles",
+    response_model=CycleCollection,
+)
+def list_cycles(vidriera_id: uuid.UUID, session: DbSession) -> CycleCollection:
+    return cycles.list_cycles(session, vidriera_id)
+
+
+@router.post(
+    "/vidrieras/{vidriera_id}/cycles",
+    response_model=CycleRead,
+    status_code=201,
+)
+def start_cycle(
+    vidriera_id: uuid.UUID,
+    payload: CycleStart,
+    session: DbSession,
+) -> CycleRead:
+    return cycles.start_cycle(session, vidriera_id, payload)
+
+
+@router.get(
+    "/vidrieras/{vidriera_id}/cycles/active",
+    response_model=CycleRead,
+)
+def get_active_cycle(vidriera_id: uuid.UUID, session: DbSession) -> CycleRead:
+    return cycles.get_active_cycle(session, vidriera_id)
+
+
+@router.get("/cycles/{cycle_id}", response_model=CycleRead)
+def get_cycle(cycle_id: uuid.UUID, session: DbSession) -> CycleRead:
+    return cycles.get_cycle(session, cycle_id)
+
+
+@router.patch("/cycles/{cycle_id}", response_model=CycleRead)
+def correct_cycle(
+    cycle_id: uuid.UUID,
+    payload: CycleCorrection,
+    session: DbSession,
+) -> CycleRead:
+    return cycles.correct_cycle(session, cycle_id, payload)
+
+
+@router.post("/cycles/{cycle_id}/finalize", response_model=CycleRead)
+def finalize_cycle(
+    cycle_id: uuid.UUID,
+    payload: CycleFinalize,
+    session: DbSession,
+) -> CycleRead:
+    return cycles.finalize_cycle(session, cycle_id, payload)
