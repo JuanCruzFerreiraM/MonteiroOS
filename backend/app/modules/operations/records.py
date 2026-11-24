@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.operations.catalog import INTERVAL_TYPES, OPERATION_LABELS
 from app.modules.operations.clock import reject_future, utc_now
-from app.modules.operations.models import Operation
+from app.modules.operations.models import OccurrenceResolution, Operation
 from app.modules.operations.schemas import (
     OperationCreate,
     OperationRead,
@@ -110,10 +110,42 @@ def update_operation(
         operation.interval_start = None
         operation.interval_end = None
         operation.timing_basis = None
+    if operation.origin == "scheduled":
+        _keep_scheduled_interval(operation)
+        if "interval_start" in fields or "interval_end" in fields:
+            if "occurred_at" not in fields:
+                operation.occurred_at = operation.interval_start
+        _sync_resolution(session, operation)
     operation.updated_at = utc_now()
     _commit(session)
     session.refresh(operation)
     return _read(operation)
+
+
+def _keep_scheduled_interval(operation: Operation) -> None:
+    if operation.operation_type not in INTERVAL_TYPES:
+        raise DomainError(
+            422,
+            "Una confirmación programada sigue siendo iluminación o nylon negro.",
+        )
+    if operation.interval_start is None or operation.interval_end is None:
+        raise DomainError(
+            422,
+            "La confirmación programada conserva el intervalo real.",
+        )
+
+
+def _sync_resolution(session: Session, operation: Operation) -> None:
+    if operation.resolution_id is None:
+        return
+    resolution = session.get(OccurrenceResolution, operation.resolution_id)
+    if resolution is None:
+        return
+    resolution.actual_start = operation.interval_start
+    resolution.actual_end = operation.interval_end
+    resolution.timing_basis = operation.timing_basis
+    resolution.cycle_id = operation.cycle_id
+    resolution.notes = operation.notes
 
 
 def _completed_interval(
@@ -201,4 +233,5 @@ def _read(operation: Operation) -> OperationRead:
         interval_start=operation.interval_start,
         interval_end=operation.interval_end,
         timing_basis=operation.timing_basis,  # type: ignore[arg-type]
+        resolution_id=operation.resolution_id,
     )

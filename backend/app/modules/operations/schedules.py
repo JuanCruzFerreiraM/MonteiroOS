@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.modules.operations.catalog import OPERATION_LABELS, require_schedule_type
 from app.modules.operations.clock import local_today, utc_now
-from app.modules.operations.models import RecurringOperationSchedule
+from app.modules.operations.models import (
+    OccurrenceResolution,
+    Operation,
+    RecurringOperationSchedule,
+)
 from app.modules.operations.recurrence import (
     expected_bounds,
     iter_dates,
@@ -157,6 +161,7 @@ def end_schedule(
             )
         if payload.effective_end > current.effective_end:
             raise DomainError(422, "El cierre no puede extender el período.")
+        _reject_resolved_after(session, current.series_id, payload.effective_end)
         current.effective_end = payload.effective_end
         current.status = "ended"
     current.updated_at = utc_now()
@@ -205,8 +210,6 @@ def list_occurrences(
                 revision.end_time,
             )
             state = "unverified" if window_has_ended(expected_end, now) else "scheduled"
-            if status is not None and state != status:
-                continue
             items.append(
                 OccurrenceRead(
                     series_id=revision.series_id,
@@ -221,6 +224,9 @@ def list_occurrences(
                     suggested_cycle_id=_cycle_on(cycles, day),
                 )
             )
+    items = _with_resolutions(session, vidriera_id, start, end, items)
+    if status is not None:
+        items = [item for item in items if item.status == status]
     items.sort(key=lambda item: (item.expected_start, item.operation_type))
     return items
 
@@ -231,6 +237,7 @@ def _replace(
     effective_from: date,
     changes: dict[str, object],
 ) -> RecurringOperationSchedule:
+    _reject_resolved_from(session, current.series_id, effective_from)
     now = utc_now()
     if current.effective_start >= effective_from:
         for key, value in changes.items():
@@ -369,6 +376,84 @@ def _read_revision(row: RecurringOperationSchedule) -> ScheduleRevisionRead:
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
+
+
+def _with_resolutions(
+    session: Session,
+    vidriera_id: uuid.UUID,
+    start: date,
+    end: date,
+    items: list[OccurrenceRead],
+) -> list[OccurrenceRead]:
+    resolutions = session.scalars(
+        select(OccurrenceResolution).where(
+            OccurrenceResolution.vidriera_id == vidriera_id,
+            OccurrenceResolution.occurrence_date >= start,
+            OccurrenceResolution.occurrence_date <= end,
+        )
+    ).all()
+    if not resolutions:
+        return items
+    operations = session.scalars(
+        select(Operation).where(
+            Operation.resolution_id.in_([row.id for row in resolutions])
+        )
+    ).all()
+    by_resolution = {row.resolution_id: row for row in operations}
+    by_key = {(row.series_id, row.occurrence_date): row for row in resolutions}
+    overlaid: list[OccurrenceRead] = []
+    for item in items:
+        resolution = by_key.get((item.series_id, item.occurrence_date))
+        if resolution is None:
+            overlaid.append(item)
+            continue
+        operation = by_resolution.get(resolution.id)
+        overlaid.append(
+            item.model_copy(
+                update={
+                    "revision_id": resolution.revision_id,
+                    "status": resolution.outcome,
+                    "expected_start": resolution.expected_start,
+                    "expected_end": resolution.expected_end,
+                    "actual_start": resolution.actual_start,
+                    "actual_end": resolution.actual_end,
+                    "timing_basis": resolution.timing_basis,
+                    "confirmation_method": resolution.confirmation_method,
+                    "cycle_id": resolution.cycle_id,
+                    "notes": resolution.notes,
+                    "operation_id": None if operation is None else operation.id,
+                }
+            )
+        )
+    return overlaid
+
+
+def _reject_resolved_from(session: Session, series_id: uuid.UUID, day: date) -> None:
+    found = session.scalar(
+        select(OccurrenceResolution.id).where(
+            OccurrenceResolution.series_id == series_id,
+            OccurrenceResolution.occurrence_date >= day,
+        )
+    )
+    if found is not None:
+        raise DomainError(
+            409,
+            "Hay confirmaciones desde esa fecha. El cambio no las reescribe.",
+        )
+
+
+def _reject_resolved_after(session: Session, series_id: uuid.UUID, day: date) -> None:
+    found = session.scalar(
+        select(OccurrenceResolution.id).where(
+            OccurrenceResolution.series_id == series_id,
+            OccurrenceResolution.occurrence_date > day,
+        )
+    )
+    if found is not None:
+        raise DomainError(
+            409,
+            "Hay confirmaciones desde esa fecha. El cambio no las reescribe.",
+        )
 
 
 def _cycle_on(cycles: list[CultivationCycle], day: date) -> uuid.UUID | None:

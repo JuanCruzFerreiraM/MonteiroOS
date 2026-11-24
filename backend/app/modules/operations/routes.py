@@ -6,7 +6,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
-from app.modules.operations import records, schedules
+from app.modules.operations import records, resolutions, schedules
+from app.modules.operations.resolution_schemas import (
+    BatchResolve,
+    OccurrenceResolve,
+    ResolveResult,
+)
 from app.modules.operations.schedule_schemas import (
     OccurrenceRead,
     ScheduleCreate,
@@ -156,3 +161,27 @@ def list_occurrences(
         operation_type=operation_type,
         status=status,
     )
+
+
+@router.post(
+    "/vidrieras/{vidriera_id}/occurrences/resolve",
+    response_model=ResolveResult,
+)
+def resolve_occurrence(
+    vidriera_id: uuid.UUID,
+    payload: OccurrenceResolve,
+    session: DbSession,
+) -> ResolveResult:
+    return resolutions.resolve_one(session, vidriera_id, payload)
+
+
+@router.post(
+    "/vidrieras/{vidriera_id}/occurrences/resolve-batch",
+    response_model=list[ResolveResult],
+)
+def resolve_occurrence_batch(
+    vidriera_id: uuid.UUID,
+    payload: BatchResolve,
+    session: DbSession,
+) -> list[ResolveResult]:
+    return resolutions.resolve_batch(session, vidriera_id, payload)

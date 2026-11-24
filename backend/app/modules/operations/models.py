@@ -41,7 +41,10 @@ class Operation(Base):
             f"operation_type IN ({_TYPES})",
             name="ck_operations_type",
         ),
-        CheckConstraint("origin = 'manual'", name="ck_operations_origin"),
+        CheckConstraint(
+            "origin IN ('manual', 'scheduled')",
+            name="ck_operations_origin",
+        ),
         CheckConstraint(
             "(interval_start IS NULL AND interval_end IS NULL) "
             "OR (interval_start IS NOT NULL AND interval_end IS NOT NULL "
@@ -54,8 +57,16 @@ class Operation(Base):
             name="ck_operations_interval_type",
         ),
         CheckConstraint(
-            "(interval_start IS NULL AND timing_basis IS NULL) "
-            "OR (interval_start IS NOT NULL AND timing_basis = 'operator_entered')",
+            "("
+            "origin = 'manual' AND resolution_id IS NULL AND ("
+            "(interval_start IS NULL AND timing_basis IS NULL) OR "
+            "(interval_start IS NOT NULL AND timing_basis = 'operator_entered')"
+            ")"
+            ") OR ("
+            "origin = 'scheduled' AND resolution_id IS NOT NULL AND "
+            "interval_start IS NOT NULL AND timing_basis IN "
+            "('operator_entered', 'assumed_from_schedule')"
+            ")",
             name="ck_operations_timing_basis",
         ),
         ForeignKeyConstraint(
@@ -64,6 +75,7 @@ class Operation(Base):
             name="fk_operations_cycle_same_vidriera",
         ),
         Index("ix_operations_vidriera_occurred", "vidriera_id", "occurred_at"),
+        UniqueConstraint("resolution_id", name="uq_operations_resolution_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -97,6 +109,15 @@ class Operation(Base):
         nullable=True,
     )
     timing_basis: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolution_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "occurrence_resolutions.id",
+            name="fk_operations_resolution_id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+    )
 
 
 class RecurringOperationSchedule(Base):
@@ -166,6 +187,99 @@ class RecurringOperationSchedule(Base):
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+
+
+class OccurrenceResolution(Base):
+    """Explicit verification of one expected occurrence.
+
+    Scheduled and unverified occurrences are calculated. This row exists only
+    after a person confirms the work or records that it did not happen.
+    Expected timestamps stay as they were at confirmation. Actual timestamps
+    are stored beside them and can be corrected later.
+    """
+
+    __tablename__ = "occurrence_resolutions"
+    __table_args__ = (
+        UniqueConstraint(
+            "series_id",
+            "occurrence_date",
+            name="uq_resolutions_series_date",
+        ),
+        CheckConstraint(
+            "outcome IN ('confirmed', 'not_occurred')",
+            name="ck_resolutions_outcome",
+        ),
+        CheckConstraint(
+            "confirmation_method = 'manual'",
+            name="ck_resolutions_method",
+        ),
+        CheckConstraint(
+            "expected_end > expected_start",
+            name="ck_resolutions_expected",
+        ),
+        CheckConstraint(
+            "operation_type IN ('artificial_lighting', 'black_nylon')",
+            name="ck_resolutions_type",
+        ),
+        CheckConstraint(
+            "("
+            "outcome = 'confirmed' AND actual_start IS NOT NULL "
+            "AND actual_end IS NOT NULL AND actual_end > actual_start "
+            "AND timing_basis IN "
+            "('assumed_from_schedule', 'operator_entered')"
+            ") OR ("
+            "outcome = 'not_occurred' AND actual_start IS NULL "
+            "AND actual_end IS NULL AND timing_basis IS NULL"
+            ")",
+            name="ck_resolutions_actual",
+        ),
+        ForeignKeyConstraint(
+            ["cycle_id", "vidriera_id"],
+            ["cultivation_cycles.id", "cultivation_cycles.vidriera_id"],
+            name="fk_resolutions_cycle_same_vidriera",
+        ),
+        Index("ix_resolutions_vidriera_date", "vidriera_id", "occurrence_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    series_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    occurrence_date: Mapped[date] = mapped_column(Date, nullable=False)
+    revision_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("recurring_operation_schedules.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    vidriera_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("vidrieras.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    operation_type: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    expected_end: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    outcome: Mapped[str] = mapped_column(Text, nullable=False)
+    confirmation_method: Mapped[str] = mapped_column(Text, nullable=False)
+    timing_basis: Mapped[str | None] = mapped_column(Text, nullable=True)
+    actual_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    actual_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    cycle_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confirmed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
     )

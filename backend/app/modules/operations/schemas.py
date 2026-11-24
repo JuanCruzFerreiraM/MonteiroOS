@@ -129,6 +129,7 @@ class OperationRead(BaseModel):
     interval_start: datetime | None
     interval_end: datetime | None
     timing_basis: Literal["operator_entered", "assumed_from_schedule"] | None
+    resolution_id: uuid.UUID | None = None
 
 
 def _object(value: object) -> dict[str, Any]:

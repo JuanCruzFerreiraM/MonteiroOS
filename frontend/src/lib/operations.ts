@@ -24,6 +24,7 @@ export type Operation = {
   interval_start: string | null;
   interval_end: string | null;
   timing_basis: "operator_entered" | "assumed_from_schedule" | null;
+  resolution_id: string | null;
 };
 
 const LABELS: Record<OperationType, string> = {

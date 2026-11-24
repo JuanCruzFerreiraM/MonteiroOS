@@ -30,6 +30,7 @@ const operation: Operation = {
   interval_start: null,
   interval_end: null,
   timing_basis: null,
+  resolution_id: null,
 };
 
 describe("OperationSection", () => {
