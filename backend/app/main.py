@@ -5,6 +5,7 @@ from sqlalchemy.exc import ProgrammingError
 from app.api.health import router as health_router
 from app.core.access import DeploymentAccessMiddleware
 from app.core.config import get_settings
+from app.modules.operations.routes import router as operations_router
 from app.modules.production.routes import router as production_router
 from app.modules.production.rules import DomainError
 
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     application.add_exception_handler(ProgrammingError, database_programming_error)
     application.include_router(health_router)
     application.include_router(production_router)
+    application.include_router(operations_router)
     return application
 
 
