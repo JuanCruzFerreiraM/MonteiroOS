@@ -156,7 +156,7 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 | Feature | Safe to build | Wait for |
 | --- | --- | --- |
 | PROD-01 | Four canteros per vidriera, with stable codes | Resolved by OQ-21 |
-| PROD-06 | Approximate boundaries. Overlap and minor overflow warn; a disconnected polygon is rejected | Imagery key and a visual check of the La Plata tiles |
+| PROD-06 | Approximate boundaries. Overlap and minor overflow warn; a disconnected polygon is rejected | A visual check of the La Plata orthophoto in the running app |
 | PROD-04 | Several varieties per cantero, without a measured share | OQ-02 before area, length, or plant-count portions |
 | PROD-05 | One medianero, or direct management | OQ-12 before extra required fields |
 | OPS-02 | Manual structured records | OQ-07 and OQ-08 before device or schedule truth |
@@ -176,5 +176,5 @@ These features have a safe slice and a blocked extension. Details are in [docs/O
 | CORE-01 application shell, loopback binding, optional access secret, backup scripts | In Progress on the feature branch. Not integrated. |
 | PROD-01 quintas, vidrieras, and canteros | In Progress on the feature branch. Not integrated. |
 | Stage 1–4 features in the tables above, except CORE-01, PROD-01, and PROD-06 | Planned |
-| PROD-06 farm map | In Progress. Stage 1. Not accepted until the imagery is inspected with a key. |
+| PROD-06 farm map | In Progress. Stage 1. Not accepted until the imagery is inspected in the running app. |
 | Satellite analysis beyond locating units, sensors, control systems, voice orders, forecasting, AI advice, multi-user access, mobile UX, multi-farm SaaS | Not committed. No specification. |

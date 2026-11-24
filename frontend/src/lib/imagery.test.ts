@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   DOCUMENTED_WORLD_IMAGERY_ATTRIBUTION,
+  IGN_ORTHOPHOTO_TILE_URL,
   geocodeSearchUrl,
   isEsriTokenError,
   isImageContentType,
   missingImageryConfig,
+  nominatimSearchUrl,
   normalizeSearchQuery,
+  openImageryConfig,
   parseGeocodeCandidates,
+  parseNominatimResults,
   parseTileCoordinate,
   parseWorldImageryMetadata,
   worldImageryTileUrl,
@@ -25,6 +29,20 @@ describe("imagery provider helpers", () => {
     expect(JSON.stringify(config)).not.toContain("secret-value");
   });
 
+  it("uses the IGN orthophoto when Esri credentials are absent", () => {
+    const config = openImageryConfig();
+
+    expect(config.configured).toBe(true);
+    expect(config.reason).toBe("ok");
+    expect(config.tileUrl).toBe(IGN_ORTHOPHOTO_TILE_URL);
+    expect(config.tileUrl).toContain("{z}/{y}/{x}");
+    expect(config.minZoom).toBe(11);
+    expect(config.maxZoom).toBe(20);
+    expect(config.attribution).toContain("Instituto Geográfico Nacional");
+    expect(config.searchEnabled).toBe(true);
+    expect(config.searchAttribution).toContain("OpenStreetMap");
+  });
+
   it("builds World Imagery requests without putting a token in the URL", () => {
     const tile = worldImageryTileUrl(12, 2345, 1456);
     const search = geocodeSearchUrl("Villa Elisa");
@@ -36,6 +54,11 @@ describe("imagery provider helpers", () => {
     expect(search).toContain("forStorage=false");
     expect(search).toContain("sourceCountry=ARG");
     expect(search).not.toContain("ESRI_API_KEY");
+
+    const places = nominatimSearchUrl("Villa Elisa");
+    expect(places).toContain("nominatim.openstreetmap.org");
+    expect(places).toContain("countrycodes=ar");
+    expect(places).not.toContain("ESRI_API_KEY");
   });
 
   it("rejects tile indexes outside the web mercator grid", () => {
@@ -82,5 +105,21 @@ describe("imagery provider helpers", () => {
         ],
       }),
     ).toEqual([{ label: "Villa Elisa", latitude: -34.86, longitude: -58.08 }]);
+    expect(
+      parseNominatimResults([
+        {
+          display_name: "Villa Elisa, Buenos Aires, Argentina",
+          lat: "-34.851",
+          lon: "-58.089",
+        },
+        { display_name: "Mal", lat: "no", lon: "-58" },
+      ]),
+    ).toEqual([
+      {
+        label: "Villa Elisa, Buenos Aires, Argentina",
+        latitude: -34.851,
+        longitude: -58.089,
+      },
+    ]);
   });
 });

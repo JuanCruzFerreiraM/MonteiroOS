@@ -5,7 +5,10 @@ import {
   isEsriTokenError,
   isImageContentType,
   missingImageryConfig,
+  nominatimSearchUrl,
+  openImageryConfig,
   parseGeocodeCandidates,
+  parseNominatimResults,
   parseWorldImageryMetadata,
   providerErrorConfig,
   readyImageryConfig,
@@ -25,7 +28,7 @@ export function esriApiKey(): string {
 export async function loadImageryConfig(): Promise<ImageryPublicConfig> {
   const apiKey = esriApiKey();
   if (!apiKey) {
-    return missingImageryConfig();
+    return openImageryConfig();
   }
   try {
     const response = await fetch(worldImageryMetadataUrl(), {
@@ -83,10 +86,7 @@ export async function searchPlaces(
 > {
   const apiKey = esriApiKey();
   if (!apiKey) {
-    return {
-      error: missingImageryConfig().message ?? "Falta la clave de Esri.",
-      status: 503,
-    };
+    return searchNominatim(query);
   }
   try {
     const response = await fetch(geocodeSearchUrl(query), {
@@ -104,6 +104,34 @@ export async function searchPlaces(
       return { error: "La búsqueda geográfica no respondió.", status: 502 };
     }
     return { results: parseGeocodeCandidates(payload) };
+  } catch {
+    return {
+      error: "No se pudo contactar el servicio de búsqueda.",
+      status: 502,
+    };
+  }
+}
+
+const NOMINATIM_USER_AGENT = "MonteiroOS/1.0 (mapa de produccion local)";
+
+async function searchNominatim(
+  query: string,
+): Promise<
+  { results: PlaceSearchResult[] } | { error: string; status: number }
+> {
+  try {
+    const response = await fetch(nominatimSearchUrl(query), {
+      headers: {
+        "User-Agent": NOMINATIM_USER_AGENT,
+        "Accept-Language": "es",
+      },
+      cache: "no-store",
+    });
+    const payload: unknown = await response.json().catch(() => null);
+    if (!response.ok) {
+      return { error: "La búsqueda geográfica no respondió.", status: 502 };
+    }
+    return { results: parseNominatimResults(payload) };
   } catch {
     return {
       error: "No se pudo contactar el servicio de búsqueda.",

@@ -1,5 +1,29 @@
 export const IMAGERY_PROVIDER_ID = "esri-world-imagery";
 
+export const IGN_PROVIDER_ID = "ign-orthophoto";
+
+export type ImageryProviderId =
+  | typeof IMAGERY_PROVIDER_ID
+  | typeof IGN_PROVIDER_ID;
+
+/**
+ * Instituto Geográfico Nacional orthophoto mosaic.
+ * GeoWebCache only serves zoom 11 through 20 for this layer. Lower and
+ * higher levels answer with an HTML error, which Leaflet would treat as a
+ * broken tile.
+ */
+export const IGN_ORTHOPHOTO_TILE_URL =
+  "https://imagenes.ign.gob.ar/geoserver/gwc/service/wmts/rest/mosaicos_vuelos/EPSG:3857/EPSG:3857:{z}/{y}/{x}?format=image/png";
+
+export const IGN_ORTHOPHOTO_ATTRIBUTION =
+  '<a href="https://www.ign.gob.ar/">Instituto Geográfico Nacional de la República Argentina</a>';
+
+export const IGN_ORTHOPHOTO_MIN_ZOOM = 11;
+
+export const IGN_ORTHOPHOTO_MAX_ZOOM = 20;
+
+export const OPENSTREETMAP_SEARCH_ATTRIBUTION = "Lugares: © OpenStreetMap";
+
 export const WORLD_IMAGERY_SERVICE =
   "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer";
 
@@ -21,7 +45,7 @@ export type ImageryReason =
   "ok" | "missing_credentials" | "rejected_credentials" | "provider_error";
 
 export type ImageryPublicConfig = {
-  providerId: typeof IMAGERY_PROVIDER_ID;
+  providerId: ImageryProviderId;
   configured: boolean;
   reason: ImageryReason;
   message: string | null;
@@ -32,6 +56,7 @@ export type ImageryPublicConfig = {
   maxZoom: number;
   attribution: string | null;
   searchEnabled: boolean;
+  searchAttribution: string | null;
 };
 
 export type PlaceSearchResult = {
@@ -66,6 +91,24 @@ export function missingImageryConfig(): ImageryPublicConfig {
     maxZoom: 19,
     attribution: null,
     searchEnabled: false,
+    searchAttribution: null,
+  };
+}
+
+export function openImageryConfig(): ImageryPublicConfig {
+  return {
+    providerId: IGN_PROVIDER_ID,
+    configured: true,
+    reason: "ok",
+    message: null,
+    tileUrl: IGN_ORTHOPHOTO_TILE_URL,
+    tileSize: 256,
+    zoomOffset: 0,
+    minZoom: IGN_ORTHOPHOTO_MIN_ZOOM,
+    maxZoom: IGN_ORTHOPHOTO_MAX_ZOOM,
+    attribution: IGN_ORTHOPHOTO_ATTRIBUTION,
+    searchEnabled: true,
+    searchAttribution: OPENSTREETMAP_SEARCH_ATTRIBUTION,
   };
 }
 
@@ -104,6 +147,7 @@ export function readyImageryConfig(options: {
     maxZoom: options.maxZoom,
     attribution: `Powered by Esri | ${options.attribution}`,
     searchEnabled: true,
+    searchAttribution: null,
   };
 }
 
@@ -134,6 +178,19 @@ export function worldImageryTileUrl(z: number, y: number, x: number): string {
 
 export function worldImageryMetadataUrl(): string {
   return `${WORLD_IMAGERY_SERVICE}?f=json`;
+}
+
+export function nominatimSearchUrl(query: string): string {
+  const params = new URLSearchParams({
+    q: query,
+    format: "jsonv2",
+    countrycodes: "ar",
+    limit: "5",
+    addressdetails: "0",
+    viewbox: "-58.6,-34.6,-57.7,-35.3",
+    bounded: "0",
+  });
+  return `https://nominatim.openstreetmap.org/search?${params.toString()}`;
 }
 
 export function geocodeSearchUrl(query: string): string {
@@ -206,6 +263,37 @@ export function parseWorldImageryMetadata(payload: unknown): {
   return { attribution, maxZoom, tileSize };
 }
 
+export function parseNominatimResults(payload: unknown): PlaceSearchResult[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+  const results: PlaceSearchResult[] = [];
+  for (const item of payload) {
+    if (!isRecord(item) || typeof item.display_name !== "string") {
+      continue;
+    }
+    const latitude = numberOrNull(item.lat);
+    const longitude = numberOrNull(item.lon);
+    if (latitude === null || longitude === null) {
+      continue;
+    }
+    if (
+      longitude < -180 ||
+      longitude > 180 ||
+      latitude < -90 ||
+      latitude > 90
+    ) {
+      continue;
+    }
+    const label = item.display_name.trim();
+    if (!label) {
+      continue;
+    }
+    results.push({ label, latitude, longitude });
+  }
+  return results;
+}
+
 export function parseGeocodeCandidates(payload: unknown): PlaceSearchResult[] {
   if (!isRecord(payload) || !Array.isArray(payload.candidates)) {
     return [];
@@ -240,6 +328,11 @@ export function parseGeocodeCandidates(payload: unknown): PlaceSearchResult[] {
     results.push({ label, latitude, longitude });
   }
   return results;
+}
+
+function numberOrNull(value: unknown): number | null {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function isTileIndex(value: string): boolean {

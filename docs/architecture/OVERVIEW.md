@@ -95,7 +95,7 @@ Features that introduce durable state add SQLAlchemy models on the existing `Bas
 
 The conceptual model is not a command to create one table per noun. A specification's data requirements are the business facts to persist. Physical table design happens during implementation, inside those requirements.
 
-PROD-06 persists approximate GeoJSON boundaries in nullable JSONB columns on the existing quinta and vidriera rows. The first mapping release does not add PostGIS and does not store satellite tiles. Imagery is requested from Esri World Imagery through a Next.js proxy when the map is open. The provider can be replaced without redrawing the stored polygons. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the licensing notes.
+PROD-06 persists approximate GeoJSON boundaries in nullable JSONB columns on the existing quinta and vidriera rows. The first mapping release does not add PostGIS and does not store satellite tiles. Without an Esri key, imagery is the Instituto Geográfico Nacional orthophoto. With a key, imagery is requested from Esri World Imagery through a Next.js proxy when the map is open. The provider can be replaced without redrawing the stored polygons. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the licensing notes.
 
 ## File storage
 

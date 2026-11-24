@@ -28,7 +28,7 @@ The Production module owns the geometry. A boundary is an optional attribute or 
 
 A preferred client approach, to be confirmed when implementation starts, is Leaflet for the map, an external satellite tile API for the imagery, and Leaflet-Geoman or an equivalent tool for drawing and editing polygons. The API and database remain the existing FastAPI application and PostgreSQL. The first release does not require PostGIS. Validated GeoJSON can be stored with the PostgreSQL already in the architecture. PostGIS is a later option only if spatial queries, indexes, or stricter geometry checks justify it. It is not a new infrastructure service.
 
-The MVP imagery provider is Esri World Imagery through the authenticated ArcGIS Location Platform service. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records that choice, the key, the attribution, and the published allowances. The unauthenticated public World Imagery endpoint is not used. Standard OpenStreetMap tiles are not satellite imagery. Geographic data stays vendor-neutral: saved polygons are GeoJSON and do not have to be redrawn if the provider changes. Greenhouse-level detail around Villa Elisa and Arturo Seguí has not been confirmed visually.
+Without `ESRI_API_KEY`, the map uses the Instituto Geográfico Nacional orthophoto `mosaicos_vuelos`. With that key, it uses Esri World Imagery through the authenticated ArcGIS Location Platform service. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records both choices, the attribution, and the published Esri allowances. The unauthenticated public World Imagery endpoint is not used. Standard OpenStreetMap tiles are not the basemap; OpenStreetMap is used only to search for a place name when the Esri key is absent. Geographic data stays vendor-neutral: saved polygons are GeoJSON and do not have to be redrawn if the provider changes. The IGN orthophoto shows greenhouse blocks around La Plata and streets in Villa Elisa and Arturo Seguí.
 
 ## Expected Behavior
 
@@ -79,7 +79,7 @@ Later features may add cycle, operation, harvest, or status overlays. Those over
 - Computed polygon area is an approximate footprint. It is not the measured physical area and it is not the productive or cultivated area. This feature does not copy a computed area into measured-area or yield fields.
 - Imagery tiles are requested from the provider when the map is open. They are not downloaded into the application database for the MVP. Saved polygons remain if the tiles fail or the provider changes.
 - Remembering map center and zoom is optional and is never a substitute for the polygon.
-- Provider attribution required by the license is visible on the map, including “Powered by Esri”. The API key stays in `ESRI_API_KEY` on the server. It is not placed in the browser bundle. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the authentication method.
+- Provider attribution required by the license is visible on the map: the Instituto Geográfico Nacional when that orthophoto is shown, and “Powered by Esri” when Esri imagery is shown. An Esri API key stays in `ESRI_API_KEY` on the server. It is not placed in the browser bundle. [OQ-29](../OPEN_QUESTIONS.md#oq-29) records the authentication method.
 - The map requires a network connection to load imagery. Lack of imagery does not delete stored records.
 
 ## Data Requirements

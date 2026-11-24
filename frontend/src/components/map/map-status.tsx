@@ -114,6 +114,9 @@ export function MapStatus({
           ))}
         </ul>
       ) : null}
+      {imagery.searchAttribution ? (
+        <p className="text-sm text-muted">{imagery.searchAttribution}</p>
+      ) : null}
       <Link
         href="/produccion"
         className="inline-block text-sm font-medium text-accent-strong underline-offset-2 hover:underline"
