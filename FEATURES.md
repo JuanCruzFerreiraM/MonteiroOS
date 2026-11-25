@@ -58,7 +58,7 @@ Future evolution is listed in the [roadmap](docs/product/ROADMAP.md) and has no 
 | OPS-02 | Operation Types & Structured Data | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-02-operation-types.md) |
 | OPS-03 | Multi-Vidriera Operations | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-03-multi-vidriera-operations.md) |
 | OPS-04 | Operation Participants & Responsibilities | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/OPS-04-operation-participants.md) |
-| TRACE-01 | Production Activity History | P0 | Planned | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/TRACE-01-production-activity-history.md) |
+| TRACE-01 | Production Activity History | P0 | In Progress | `FRONTEND` `BACKEND` `DATABASE` | [spec](docs/features/TRACE-01-production-activity-history.md) |
 | TRACE-02 | Observations & Attachments | P1 | Planned | `FRONTEND` `BACKEND` `DATABASE` `STORAGE` | [spec](docs/features/TRACE-02-observations-attachments.md) |
 
 ## Stage 2 — Harvesting and yield measurement
