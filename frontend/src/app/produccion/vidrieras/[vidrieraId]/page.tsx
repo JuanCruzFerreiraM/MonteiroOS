@@ -2,12 +2,16 @@ import Link from "next/link";
 
 import { ActiveToggleForm } from "@/app/produccion/forms";
 import { CycleSection } from "@/components/production/cycle-panel";
+import { OperationSection } from "@/components/production/operation-panel";
+import { ScheduleSection } from "@/components/production/schedule-panel";
 import {
   CanteroList,
   StatusBadge,
 } from "@/components/production/production-views";
 import { readJson } from "@/lib/backend";
 import { suggestedClosingDate, type CycleCollection } from "@/lib/cycles";
+import type { Operation } from "@/lib/operations";
+import { addDays, civilToday, type Occurrence } from "@/lib/schedules";
 import type { VidrieraDetail } from "@/lib/production";
 
 export const dynamic = "force-dynamic";
@@ -18,9 +22,21 @@ export default async function VidrieraDetailPage({
   params: Promise<{ vidrieraId: string }>;
 }) {
   const { vidrieraId } = await params;
-  const [vidriera, cycles] = await Promise.all([
+  const today = civilToday();
+  const pendingQuery = new URLSearchParams({
+    from: addDays(today, -14),
+    to: today,
+    status: "unverified",
+  });
+  const [vidriera, cycles, operations, pending] = await Promise.all([
     readJson<VidrieraDetail>(`/api/production/vidrieras/${vidrieraId}`),
     readJson<CycleCollection>(`/api/production/vidrieras/${vidrieraId}/cycles`),
+    readJson<Operation[]>(
+      `/api/operations/vidrieras/${vidrieraId}/operations?limit=8`,
+    ),
+    readJson<Occurrence[]>(
+      `/api/operations/vidrieras/${vidrieraId}/occurrences?${pendingQuery}`,
+    ),
   ]);
   if (!vidriera.ok) {
     return <p role="alert">{vidriera.message}</p>;
@@ -66,6 +82,16 @@ export default async function VidrieraDetailPage({
         </h3>
         <CanteroList vidrieraId={record.id} canteros={record.canteros} />
       </section>
+      <ScheduleSection
+        vidrieraId={record.id}
+        pending={pending.ok ? pending.data : null}
+        loadError={pending.ok ? undefined : pending.message}
+      />
+      <OperationSection
+        vidrieraId={record.id}
+        operations={operations.ok ? operations.data : null}
+        loadError={operations.ok ? undefined : operations.message}
+      />
       <CycleSection
         vidrieraId={record.id}
         cycles={cycles.ok ? cycles.data : null}
