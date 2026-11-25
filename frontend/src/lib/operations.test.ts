@@ -4,9 +4,11 @@ import {
   acceptsInterval,
   formatOccurredAt,
   fromLocalInput,
+  historySearch,
   intervalError,
   occurredAtError,
   operationLabel,
+  originLabel,
   toLocalInput,
 } from "./operations";
 
@@ -33,5 +35,19 @@ describe("operation times", () => {
       /posterior/,
     );
     expect(intervalError("2024-06-01T22:00", "2024-06-02T02:00")).toBeNull();
+  });
+
+  it("keeps history filters in the page query", () => {
+    expect(originLabel("manual")).toBe("Registro manual");
+    expect(originLabel("scheduled")).toBe("Confirmada desde la programación");
+    expect(
+      historySearch({
+        type: "irrigation",
+        from: "2024-06-01",
+        to: "2024-06-02",
+        cycle: "none",
+      }),
+    ).toBe("?type=irrigation&from=2024-06-01&to=2024-06-02&cycle=none");
+    expect(historySearch({})).toBe("");
   });
 });

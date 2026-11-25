@@ -4,6 +4,7 @@ import {
   CorrectCycleForm,
   FinalizeCycleForm,
 } from "@/app/produccion/cycle-forms";
+import { OperationHistory } from "@/components/production/operation-panel";
 import { readJson } from "@/lib/backend";
 import {
   cycleStatusLabel,
@@ -11,16 +12,20 @@ import {
   suggestedClosingDate,
   type CultivationCycle,
 } from "@/lib/cycles";
+import type { OperationPage } from "@/lib/operations";
 import type { VidrieraDetail } from "@/lib/production";
 
 export const dynamic = "force-dynamic";
 
 export default async function CycleDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ cycleId: string }>;
+  searchParams: Promise<{ cursor?: string }>;
 }) {
   const { cycleId } = await params;
+  const query = await searchParams;
   const cycle = await readJson<CultivationCycle>(
     `/api/production/cycles/${cycleId}`,
   );
@@ -28,9 +33,20 @@ export default async function CycleDetailPage({
     return <p role="alert">{cycle.message}</p>;
   }
   const record = cycle.data;
-  const vidriera = await readJson<VidrieraDetail>(
-    `/api/production/vidrieras/${record.vidriera_id}`,
-  );
+  const cursor = query.cursor ?? "";
+  const historyParameters = new URLSearchParams({
+    cycle: record.id,
+    limit: "20",
+  });
+  if (cursor) {
+    historyParameters.set("cursor", cursor);
+  }
+  const [vidriera, history] = await Promise.all([
+    readJson<VidrieraDetail>(`/api/production/vidrieras/${record.vidriera_id}`),
+    readJson<OperationPage>(
+      `/api/operations/vidrieras/${record.vidriera_id}/operations?${historyParameters}`,
+    ),
+  ]);
   const backLabel = vidriera.ok
     ? `Volver a ${vidriera.data.code}`
     : "Volver a la vidriera";
@@ -69,6 +85,32 @@ export default async function CycleDetailPage({
           suggestedEndDate={suggestedClosingDate()}
         />
       ) : null}
+      <section className="space-y-3" aria-labelledby="historial-ciclo">
+        <h3 id="historial-ciclo" className="text-sm font-semibold">
+          Operaciones de este ciclo
+        </h3>
+        <p className="text-sm leading-6 text-muted">
+          Solo las operaciones guardadas con este ciclo. Una operación sin ciclo
+          no aparece acá.
+        </p>
+        {history.ok ? (
+          <OperationHistory
+            operations={history.data.items}
+            cycleLabels={{ [record.id]: "Este ciclo" }}
+            emptyMessage="Este ciclo no tiene operaciones asociadas."
+          />
+        ) : (
+          <p role="alert">{history.message}</p>
+        )}
+        {history.ok && history.data.next_cursor ? (
+          <Link
+            href={`/produccion/ciclos/${record.id}?cursor=${encodeURIComponent(history.data.next_cursor)}`}
+            className="inline-block rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium"
+          >
+            Ver más antiguas
+          </Link>
+        ) : null}
+      </section>
       <section className="space-y-3" aria-labelledby="correccion-title">
         <h3 id="correccion-title" className="text-sm font-semibold">
           Corregir fechas o notas

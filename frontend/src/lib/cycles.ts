@@ -42,6 +42,25 @@ export function cycleStatusLabel(status: CultivationCycle["status"]): string {
   return status === "active" ? "Activo" : "Finalizado";
 }
 
+export function cycleOptionLabel(cycle: CultivationCycle): string {
+  if (cycle.status === "active") {
+    return `Activo · ${formatCycleDate(cycle.start_date)}`;
+  }
+  const end = cycle.end_date ? formatCycleDate(cycle.end_date) : "";
+  return `Finalizado · ${formatCycleDate(cycle.start_date)} – ${end}`;
+}
+
+export function cycleLabelMap(cycles: CycleCollection): Record<string, string> {
+  const labels: Record<string, string> = {};
+  if (cycles.active) {
+    labels[cycles.active.id] = cycleOptionLabel(cycles.active);
+  }
+  for (const cycle of cycles.history) {
+    labels[cycle.id] = cycleOptionLabel(cycle);
+  }
+  return labels;
+}
+
 export function plantingDateError(value: string): string | null {
   if (!isCalendarDate(value)) {
     return "La fecha de plantación debe ser una fecha válida (AAAA-MM-DD).";

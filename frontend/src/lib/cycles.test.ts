@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   closingDateError,
+  cycleLabelMap,
+  cycleOptionLabel,
   cycleStatusLabel,
   formatCycleDate,
   isCalendarDate,
   plantingDateError,
   suggestedClosingDate,
+  type CultivationCycle,
 } from "./cycles";
 
 describe("calendar dates", () => {
@@ -25,6 +28,28 @@ describe("calendar dates", () => {
       /Confirme/,
     );
     expect(closingDateError("2024-03-02", "2024-03-02", true)).toBeNull();
+  });
+
+  it("labels an active cycle and a finalized one separately", () => {
+    const active: CultivationCycle = {
+      id: "cycle-active",
+      vidriera_id: "vid-1",
+      start_date: "2024-06-01",
+      end_date: null,
+      status: "active",
+      notes: null,
+    };
+    const finalized: CultivationCycle = {
+      ...active,
+      id: "cycle-old",
+      start_date: "2024-01-01",
+      end_date: "2024-03-01",
+      status: "finalized",
+    };
+    expect(cycleOptionLabel(active)).toBe("Activo · 01/06/2024");
+    expect(cycleLabelMap({ active, history: [finalized] })["cycle-old"]).toBe(
+      "Finalizado · 01/01/2024 – 01/03/2024",
+    );
   });
 
   it("suggests the calendar date in Argentina", () => {

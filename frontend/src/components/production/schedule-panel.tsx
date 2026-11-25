@@ -39,6 +39,10 @@ export function ScheduleSection({
           </Link>
         </div>
       </div>
+      <p className="text-sm leading-6 text-muted">
+        La programación muestra lo esperado. El historial muestra solo
+        operaciones registradas.
+      </p>
       {loadError ? <p role="alert">{loadError}</p> : null}
       {pending && count === 0 ? (
         <p className="text-sm text-muted">
