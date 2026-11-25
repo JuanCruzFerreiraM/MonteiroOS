@@ -129,7 +129,7 @@ def test_records_a_manual_operation_without_a_cycle_or_beds(client: TestClient) 
     assert uuid.UUID(body["id"])
     listed = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations")
     assert listed.status_code == 200
-    assert [item["id"] for item in listed.json()] == [body["id"]]
+    assert [item["id"] for item in listed.json()["items"]] == [body["id"]]
     assert active["id"] != body["cycle_id"]
 
 
@@ -142,7 +142,10 @@ def test_two_saves_create_two_operations(client: TestClient) -> None:
     assert second.status_code == 201
     assert first.json()["id"] != second.json()["id"]
     listed = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations").json()
-    assert [item["id"] for item in listed] == [second.json()["id"], first.json()["id"]]
+    assert [item["id"] for item in listed["items"]] == [
+        second.json()["id"],
+        first.json()["id"],
+    ]
 
 
 def test_accepts_an_explicit_finalized_cycle_and_rejects_another_vidriera(
@@ -253,7 +256,7 @@ def test_unknown_operation_and_vidriera(client: TestClient) -> None:
 
     assert missing_vidriera.status_code == 404
     assert missing_operation.status_code == 404
-    assert listed.json() == []
+    assert listed.json()["items"] == []
 
 
 def test_database_rejects_an_interval_that_ends_before_it_starts(engine) -> None:

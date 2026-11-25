@@ -22,6 +22,7 @@ from app.modules.operations.schedule_schemas import (
 )
 from app.modules.operations.schemas import (
     OperationCreate,
+    OperationPage,
     OperationRead,
     OperationUpdate,
 )
@@ -33,14 +34,28 @@ DbSession = Annotated[Session, Depends(get_db_session)]
 
 @router.get(
     "/vidrieras/{vidriera_id}/operations",
-    response_model=list[OperationRead],
+    response_model=OperationPage,
 )
 def list_operations(
     vidriera_id: uuid.UUID,
     session: DbSession,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
-) -> list[OperationRead]:
-    return records.list_operations(session, vidriera_id, limit=limit)
+    operation_type: Annotated[str | None, Query()] = None,
+    start: Annotated[date | None, Query(alias="from")] = None,
+    end: Annotated[date | None, Query(alias="to")] = None,
+    cycle: Annotated[str | None, Query()] = None,
+    cursor: Annotated[str | None, Query()] = None,
+) -> OperationPage:
+    return records.list_operations(
+        session,
+        vidriera_id,
+        limit=limit,
+        operation_type=operation_type or None,
+        start=start,
+        end=end,
+        cycle=cycle or None,
+        cursor=cursor or None,
+    )
 
 
 @router.post(

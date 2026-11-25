@@ -196,7 +196,7 @@ def test_expands_daily_and_weekday_schedules_including_overnight(
     assert "62" in too_long.json()["detail"]
 
     operations = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations")
-    assert operations.json() == []
+    assert operations.json()["items"] == []
     stored = client.get(f"/api/operations/schedules/{series}")
     assert stored.json()["current"]["start_time"] == "22:00:00"
 

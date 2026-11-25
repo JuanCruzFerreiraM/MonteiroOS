@@ -141,7 +141,7 @@ def test_confirms_one_occurrence_without_assuming_the_cycle(client: TestClient) 
     assert repeated.status_code == 200
     assert repeated.json()["status"] == "unchanged"
     listed = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations")
-    assert len(listed.json()) == 1
+    assert len(listed.json()["items"]) == 1
 
     opened = client.get(
         f"/api/operations/vidrieras/{vidriera['id']}/occurrences",
@@ -189,7 +189,7 @@ def test_batch_reports_conflicts_without_duplicating_successes(
         "confirmed",
     ]
     operations = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations")
-    assert len(operations.json()) == 2
+    assert len(operations.json()["items"]) == 2
     second = client.post(
         f"/api/operations/vidrieras/{vidriera['id']}/occurrences/resolve-batch",
         json={
@@ -211,7 +211,7 @@ def test_batch_reports_conflicts_without_duplicating_successes(
     assert second.status_code == 200
     assert [item["status"] for item in second.json()] == ["conflict", "not_occurred"]
     operations = client.get(f"/api/operations/vidrieras/{vidriera['id']}/operations")
-    assert len(operations.json()) == 2
+    assert len(operations.json()["items"]) == 2
     missed = client.get(
         f"/api/operations/vidrieras/{vidriera['id']}/occurrences",
         params={"from": "2024-06-02", "to": "2024-06-02", "status": "not_occurred"},
