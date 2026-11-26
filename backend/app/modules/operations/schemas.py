@@ -132,6 +132,13 @@ class OperationRead(BaseModel):
     resolution_id: uuid.UUID | None = None
 
 
+class OperationPage(BaseModel):
+    """One page of completed operations, newest occurrence first."""
+
+    items: list[OperationRead]
+    next_cursor: str | None = None
+
+
 def _object(value: object) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise DomainError(422, "El cuerpo de la operación no es válido.")

@@ -1,12 +1,17 @@
+import base64
 import uuid
-from datetime import datetime
+from datetime import UTC, date, datetime, time, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.modules.operations.catalog import INTERVAL_TYPES, OPERATION_LABELS
-from app.modules.operations.clock import reject_future, utc_now
+from app.modules.operations.catalog import (
+    INTERVAL_TYPES,
+    OPERATION_LABELS,
+    require_operation_type,
+)
+from app.modules.operations.clock import APP_TIMEZONE, reject_future, utc_now
 from app.modules.operations.models import (
     OccurrenceResolution,
     Operation,
@@ -14,6 +19,7 @@ from app.modules.operations.models import (
 )
 from app.modules.operations.schemas import (
     OperationCreate,
+    OperationPage,
     OperationRead,
     OperationUpdate,
 )
@@ -29,16 +35,59 @@ def list_operations(
     vidriera_id: uuid.UUID,
     *,
     limit: int = 50,
-) -> list[OperationRead]:
+    operation_type: str | None = None,
+    start: date | None = None,
+    end: date | None = None,
+    cycle: str | None = None,
+    cursor: str | None = None,
+) -> OperationPage:
+    """Return completed operations for one vidriera.
+
+    Ordering is occurrence time, then identifier, both descending. The index
+    on vidriera and occurrence time supports the date bounds. Rows that share
+    a timestamp are ordered by identifier, so a cursor does not skip or repeat
+    one. Expectations that were not confirmed are not rows in this table.
+    """
     _vidriera_or_404(session, vidriera_id)
+    statement = select(Operation).where(Operation.vidriera_id == vidriera_id)
+    if operation_type:
+        statement = statement.where(
+            Operation.operation_type == require_operation_type(operation_type),
+        )
+    cycle_match = _history_cycle(session, vidriera_id, cycle)
+    if cycle_match is not None:
+        statement = statement.where(cycle_match)
+    lower, upper = _history_bounds(start, end)
+    if lower is not None:
+        statement = statement.where(Operation.occurred_at >= lower)
+    if upper is not None:
+        statement = statement.where(Operation.occurred_at < upper)
+    if cursor:
+        moment, operation_id = _decode_cursor(cursor)
+        statement = statement.where(
+            or_(
+                Operation.occurred_at < moment,
+                and_(
+                    Operation.occurred_at == moment,
+                    Operation.id < operation_id,
+                ),
+            )
+        )
     bounded = min(max(limit, 1), 100)
-    rows = session.scalars(
-        select(Operation)
-        .where(Operation.vidriera_id == vidriera_id)
-        .order_by(Operation.occurred_at.desc(), Operation.id.desc())
-        .limit(bounded)
-    ).all()
-    return [_read(row) for row in rows]
+    rows = list(
+        session.scalars(
+            statement.order_by(
+                Operation.occurred_at.desc(),
+                Operation.id.desc(),
+            ).limit(bounded + 1)
+        ).all()
+    )
+    visible = rows[:bounded]
+    next_cursor = _encode_cursor(visible[-1]) if len(rows) > bounded else None
+    return OperationPage(
+        items=[_read(row) for row in visible],
+        next_cursor=next_cursor,
+    )
 
 
 def get_operation(session: Session, operation_id: uuid.UUID) -> OperationRead:
@@ -227,6 +276,58 @@ def _completed_interval(
         raise DomainError(422, "El fin real tiene que ser posterior al inicio.")
     reject_future(end, "fin real")
     return start, end
+
+
+def _history_bounds(
+    start: date | None,
+    end: date | None,
+) -> tuple[datetime | None, datetime | None]:
+    if start is not None and end is not None and end < start:
+        raise DomainError(
+            422,
+            "La fecha hasta no puede ser anterior a la fecha desde.",
+        )
+    lower = _local_midnight(start) if start is not None else None
+    upper = _local_midnight(end + timedelta(days=1)) if end is not None else None
+    return lower, upper
+
+
+def _local_midnight(day: date) -> datetime:
+    return datetime.combine(day, time.min, tzinfo=APP_TIMEZONE)
+
+
+def _history_cycle(session: Session, vidriera_id: uuid.UUID, cycle: str | None):
+    if cycle is None or cycle == "":
+        return None
+    if cycle == "none":
+        return Operation.cycle_id.is_(None)
+    try:
+        cycle_id = uuid.UUID(cycle)
+    except ValueError:
+        raise DomainError(422, "El ciclo del historial no es válido.") from None
+    _require_cycle(session, vidriera_id, cycle_id)
+    return Operation.cycle_id == cycle_id
+
+
+def _encode_cursor(operation: Operation) -> str:
+    instant = operation.occurred_at.astimezone(UTC).strftime(
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+    )
+    raw = f"{instant}|{operation.id}"
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
+def _decode_cursor(value: str) -> tuple[datetime, uuid.UUID]:
+    padded = value + "=" * (-len(value) % 4)
+    try:
+        raw = base64.urlsafe_b64decode(padded.encode()).decode()
+        instant, operation_id = raw.split("|", 1)
+        moment = datetime.strptime(instant, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+            tzinfo=UTC,
+        )
+        return moment, uuid.UUID(operation_id)
+    except (ValueError, UnicodeError):
+        raise DomainError(422, "El cursor del historial no es válido.") from None
 
 
 def _require_cycle(

@@ -9,8 +9,12 @@ import {
   StatusBadge,
 } from "@/components/production/production-views";
 import { readJson } from "@/lib/backend";
-import { suggestedClosingDate, type CycleCollection } from "@/lib/cycles";
-import type { Operation } from "@/lib/operations";
+import {
+  cycleLabelMap,
+  suggestedClosingDate,
+  type CycleCollection,
+} from "@/lib/cycles";
+import type { OperationPage } from "@/lib/operations";
 import { addDays, civilToday, type Occurrence } from "@/lib/schedules";
 import type { VidrieraDetail } from "@/lib/production";
 
@@ -31,7 +35,7 @@ export default async function VidrieraDetailPage({
   const [vidriera, cycles, operations, pending] = await Promise.all([
     readJson<VidrieraDetail>(`/api/production/vidrieras/${vidrieraId}`),
     readJson<CycleCollection>(`/api/production/vidrieras/${vidrieraId}/cycles`),
-    readJson<Operation[]>(
+    readJson<OperationPage>(
       `/api/operations/vidrieras/${vidrieraId}/operations?limit=8`,
     ),
     readJson<Occurrence[]>(
@@ -89,7 +93,8 @@ export default async function VidrieraDetailPage({
       />
       <OperationSection
         vidrieraId={record.id}
-        operations={operations.ok ? operations.data : null}
+        operations={operations.ok ? operations.data.items : null}
+        cycleLabels={cycles.ok ? cycleLabelMap(cycles.data) : {}}
         loadError={operations.ok ? undefined : operations.message}
       />
       <CycleSection

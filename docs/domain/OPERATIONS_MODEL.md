@@ -10,7 +10,7 @@ An operation may later target more than one vidriera. The physical scope of the 
 
 The person who records an operation may be different from anyone who performed it. Some activities have no human executor.
 
-A configured schedule does not prove that an operation physically happened. Lighting and black nylon can have an expected interval in [OPS-AUTO-01](../features/OPS-AUTO-01-recurring-operation-scheduling.md) and, separately, a confirmed operation in OPS-01. Passing the scheduled time does not create that operation. A completed operation's time is not in the future, aside from a five-minute clock tolerance. A confirmed scheduled operation keeps its schedule type, and its occurrence time is the actual start of the interval. A manual operation can still change type.
+A configured schedule does not prove that an operation physically happened. Lighting and black nylon can have an expected interval in [OPS-AUTO-01](../features/OPS-AUTO-01-recurring-operation-scheduling.md) and, separately, a confirmed operation in OPS-01. Passing the scheduled time does not create that operation. A completed operation's time is not in the future, aside from a five-minute clock tolerance. A confirmed scheduled operation keeps its schedule type, and its occurrence time is the actual start of the interval. A manual operation can still change type. [TRACE-01](../features/TRACE-01-production-activity-history.md) reads those operation rows. It does not turn an expectation or an explicit non-occurrence into completed work.
 
 Preparation between cultivation cycles must be representable without assigning it to the wrong cycle.
 

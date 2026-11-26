@@ -10,6 +10,11 @@ export const OPERATION_TYPES = [
 
 export type OperationType = (typeof OPERATION_TYPES)[number];
 
+export type OperationPage = {
+  items: Operation[];
+  next_cursor: string | null;
+};
+
 export type Operation = {
   id: string;
   vidriera_id: string;
@@ -38,6 +43,39 @@ const LABELS: Record<OperationType, string> = {
 };
 
 const LOCAL_MOMENT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+export function originLabel(origin: Operation["origin"]): string {
+  return origin === "scheduled"
+    ? "Confirmada desde la programación"
+    : "Registro manual";
+}
+
+export function historySearch(query: {
+  type?: string;
+  from?: string;
+  to?: string;
+  cycle?: string;
+  cursor?: string;
+}): string {
+  const params = new URLSearchParams();
+  if (query.type) {
+    params.set("type", query.type);
+  }
+  if (query.from) {
+    params.set("from", query.from);
+  }
+  if (query.to) {
+    params.set("to", query.to);
+  }
+  if (query.cycle) {
+    params.set("cycle", query.cycle);
+  }
+  if (query.cursor) {
+    params.set("cursor", query.cursor);
+  }
+  const text = params.toString();
+  return text ? `?${text}` : "";
+}
 
 export function operationLabel(type: string): string {
   if (type in LABELS) {

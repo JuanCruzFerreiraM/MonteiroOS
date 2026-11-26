@@ -4,7 +4,7 @@
 - ID: TRACE-01
 - Module: Operations
 - Stage: 1
-- Status: Planned
+- Status: In Progress
 - Priority: P0
 - Domains: `FRONTEND` `BACKEND` `DATABASE`
 - Dependencies: OPS-01
@@ -19,15 +19,23 @@ The reason to register an operation is to reconstruct what happened. The history
 
 ## Functional Description
 
-The vidriera detail lists operations in reverse chronological order. Filters narrow by type and by date range. Each entry shows the type, time, cycle or an explicit "outside a cycle" label, the recording person when one was set, and notes when present. The entry does not list varieties as the scope of the operation. Opening an entry shows the full operation.
+The vidriera detail lists recent operations in reverse chronological order of the occurrence time, not the time the row was written or edited. The full history view adds server-side filters for type, an inclusive Argentine calendar range, and cycle. The cycle filter can select one cycle or the operations stored with no cycle. Clearing the filters returns to the unfiltered list. An empty filtered list says that the filter matched nothing.
 
-A cycle view lists the operations linked to that cycle. An operation with no cycle appears on the vidriera and not on a cycle.
+Each entry shows the Spanish type label, the occurrence time, whether the record is manual or a confirmed scheduled occurrence, the cycle or "Sin ciclo", notes when present, and the actual interval when one was stored. The entry links to the existing operation page. It does not list varieties or canteros as the scope of the operation. There is one row per operation.
 
-When OPS-03 is implemented, a shared operation appears once in each targeted vidriera and uses the same identity. This feature's first release, before OPS-03, lists the single-vidriera operations from OPS-01.
+A cycle view lists the operations whose saved cycle reference is that cycle. Membership is not inferred from dates. An operation with no cycle appears on the vidriera and not on a cycle. A finalized cycle keeps this list.
 
-The history is read-only. Corrections happen by editing the operation.
+The list is paginated in the database. Order is occurrence time descending, then operation identifier descending, so a timestamp tie does not skip or repeat a row. The page returns at most the requested limit and a cursor for the next, older page. The existing index on vidriera and occurrence time supports the query. No second history table is stored.
 
-Expected and unverified occurrences from OPS-AUTO-01 are not completed work. A confirmed scheduled occurrence is an operation. An explicit non-occurrence stays a resolution and is not shown as work that happened.
+The history is read-only. Corrections happen by editing the operation through OPS-01. The vidriera of an operation stays fixed, and a scheduled operation keeps its type.
+
+Recorded operations, schedule expectations, and occurrence resolutions are different facts:
+
+- An operation is completed work. Manual records and confirmed scheduled occurrences are both operations. Only these rows appear in the history.
+- A schedule revision says what was expected. TRACE-01 does not list it as work that happened.
+- A resolution is a person's decision about one expected occurrence. Confirmation creates an operation and keeps the expected timestamps beside the actual ones. An explicit non-occurrence stays a resolution and is not shown as completed work. A scheduled or unverified occurrence is calculated and is not an operation.
+
+The vidriera keeps the schedule summary and the link to the confirmation screen separate from the history list.
 
 ## Expected Behavior
 
@@ -56,7 +64,7 @@ No new business facts. The view reads operations, scopes, cycles, and vidrieras.
 
 - [ ] After an operation is saved for a vidriera, that vidriera's history lists it with type and time.
 - [ ] The history entry does not repeat the operation once per cantero or variety.
-- [ ] An operation saved with no cycle is labeled as outside a cycle and does not appear on any cycle's history.
+- [ ] An operation saved with no cycle is labeled "Sin ciclo" and does not appear on any cycle's history.
 - [ ] An operation linked to a cycle appears on that cycle's history.
 - [ ] A finalized cycle's history remains available and unchanged after a newer cycle starts.
 - [ ] Filtering by type shows only that type, and clearing the filter restores the other operations.
@@ -66,8 +74,10 @@ No new business facts. The view reads operations, scopes, cycles, and vidrieras.
 ## Edge Cases & Validation
 
 - A date filter with the end before the start is rejected.
-- Operations are ordered by occurrence time, not by edit time.
+- A calendar day is inclusive in America/Argentina/Buenos_Aires. The bounds are the local midnight and the next local midnight, not UTC midnight. An overnight interval belongs to the day its actual start falls on.
+- Operations are ordered by occurrence time, not by edit time. Equal timestamps stay in identifier order across pages.
 - Notes that are empty do not show a blank section title.
+- A cursor that cannot be read is rejected.
 
 ## Out of Scope
 
